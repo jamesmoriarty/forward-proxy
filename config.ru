@@ -35,4 +35,3 @@ proxy = proc do |env|
 end
 
 run proxy
-
