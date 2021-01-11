@@ -1,0 +1,89 @@
+#!/usr/bin/env ruby
+
+require 'socket'
+require 'webrick'
+require 'net/http'
+
+module ForwardProxy
+  class HTTPMethodNotImplementedError < StandardError; end
+
+  class Server
+    def handle_tunnel(req)
+      <<~eos.chomp
+      HTTP/1.1 501
+      eos
+    end
+
+    def handle(req)
+      resp = Net::HTTP.start(req.host, req.port) do |http|
+        http.request prepare_proxy_req(req)
+      end
+
+      <<~eos.chomp
+      HTTP/1.1 #{resp.code}
+      #{resp.each.map { |header, value| "#{header}: #{value}" }.join("\n")}
+
+      #{resp.body}
+      eos
+    end
+
+    def prepare_proxy_req(req)
+      req_headers = Hash[req.header.map { |k,v| [k,v.first] }]
+
+      case req.request_method
+      when "GET"
+        Net::HTTP::Get.new(req.path, req_headers)
+      else
+        raise HTTPMethodNotImplementedError
+      end
+    end
+
+    def parse_req(conn)
+      req = WEBrick::HTTPRequest.new(WEBrick::Config::HTTP).tap do |req|
+        req.parse(conn)
+      end
+    end
+
+    def log(str, level = 'INFO')
+      puts "[#{Time.now}] #{level} #{str}"
+    end
+
+    def initialize(port: 9292)
+      server = TCPServer.new(port)
+
+      log("Listing :#{port}")
+      
+      loop do
+        client = server.accept
+
+        Thread.start(client) do |conn|
+          begin
+            req = parse_req(conn)
+        
+            log(req.request_line)
+      
+            case req.request_method
+            when "CONNECT"
+              conn.print handle_tunnel(req)
+            when "GET", "POST"
+              conn.puts handle(req)
+            else
+              raise HTTPMethodNotImplementedError
+            end
+          rescue => e
+            puts e.message
+            puts e.backtrace.map { |line| "  #{line}"}
+      
+            conn.print <<~eos.chomp
+            HTTP/1.1 502
+            eos
+          ensure
+            conn.close
+          end
+        end
+      end
+    end
+  end
+end
+
+ForwardProxy::Server.new
