@@ -8,18 +8,72 @@ module ForwardProxy
   class HTTPMethodNotImplementedError < StandardError; end
 
   class Server
-    def handle_tunnel(req)
-      <<~eos.chomp
-      HTTP/1.1 501
-      eos
+    def initialize(port: 9292)
+      server = TCPServer.new(port)
+
+      log("Listing :#{port}")
+      
+      loop do
+        client = server.accept
+
+        Thread.start(client) do |conn|
+          begin
+            req = parse_req(conn)
+        
+            log(req.request_line)
+      
+            case req.request_method
+            when "CONNECT"
+              handle_tunnel(conn, req)
+            when "GET", "POST"
+              handle(conn, req)
+            else
+              raise HTTPMethodNotImplementedError
+            end
+          rescue => e
+            puts e.message
+            puts e.backtrace.map { |line| "  #{line}"}
+      
+            conn.print <<~eos.chomp
+            HTTP/1.1 502
+            eos
+          ensure
+            conn.close
+          end
+        end
+      end
     end
 
-    def handle(req)
+    private
+
+    def transfer(dest_conn, src_conn)
+      IO.copy_stream(src_conn, dest_conn)
+    rescue => e
+      log(e.message, "WARNING")
+    end
+
+    def handle_tunnel(client_conn, req)
+      host, port = *req['Host'].split(':')
+      dest_conn = TCPSocket.new(host, port)
+
+      # https://tools.ietf.org/html/rfc7231#section-4.3.6
+      client_conn.write <<~eos
+      HTTP/1.1 200 OK
+
+      eos
+
+      [
+        Thread.new { transfer(client_conn, dest_conn) },
+        Thread.new { transfer(dest_conn, client_conn) }
+      ].each(&:join)
+    end
+
+    def handle(conn, req)
       resp = Net::HTTP.start(req.host, req.port) do |http|
         http.request prepare_proxy_req(req)
       end
 
-      <<~eos.chomp
+      conn.puts <<~eos.chomp
       HTTP/1.1 #{resp.code}
       #{resp.each.map { |header, value| "#{header}: #{value}" }.join("\n")}
 
@@ -46,42 +100,6 @@ module ForwardProxy
 
     def log(str, level = 'INFO')
       puts "[#{Time.now}] #{level} #{str}"
-    end
-
-    def initialize(port: 9292)
-      server = TCPServer.new(port)
-
-      log("Listing :#{port}")
-      
-      loop do
-        client = server.accept
-
-        Thread.start(client) do |conn|
-          begin
-            req = parse_req(conn)
-        
-            log(req.request_line)
-      
-            case req.request_method
-            when "CONNECT"
-              conn.print handle_tunnel(req)
-            when "GET", "POST"
-              conn.puts handle(req)
-            else
-              raise HTTPMethodNotImplementedError
-            end
-          rescue => e
-            puts e.message
-            puts e.backtrace.map { |line| "  #{line}"}
-      
-            conn.print <<~eos.chomp
-            HTTP/1.1 502
-            eos
-          ensure
-            conn.close
-          end
-        end
-      end
     end
   end
 end
