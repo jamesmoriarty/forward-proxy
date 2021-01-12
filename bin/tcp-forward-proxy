@@ -11,7 +11,7 @@ module ForwardProxy
     def initialize(port: 9292)
       server = TCPServer.new(port)
 
-      log("Listing :#{port}")
+      log("Listening :#{port}")
       
       loop do
         client = server.accept
@@ -33,10 +33,6 @@ module ForwardProxy
           rescue => e
             puts e.message
             puts e.backtrace.map { |line| "  #{line}"}
-      
-            conn.print <<~eos.chomp
-            HTTP/1.1 502
-            eos
           ensure
             conn.close
           end
@@ -45,12 +41,6 @@ module ForwardProxy
     end
 
     private
-
-    def transfer(dest_conn, src_conn)
-      IO.copy_stream(src_conn, dest_conn)
-    rescue => e
-      log(e.message, "WARNING")
-    end
 
     def handle_tunnel(client_conn, req)
       host, port = *req['Host'].split(':')
@@ -70,7 +60,7 @@ module ForwardProxy
 
     def handle(conn, req)
       resp = Net::HTTP.start(req.host, req.port) do |http|
-        http.request prepare_proxy_req(req)
+        http.request map_webrick_to_net_http_req(req)
       end
 
       conn.puts <<~eos.chomp
@@ -81,7 +71,7 @@ module ForwardProxy
       eos
     end
 
-    def prepare_proxy_req(req)
+    def map_webrick_to_net_http_req(req)
       req_headers = Hash[req.header.map { |k,v| [k,v.first] }]
 
       case req.request_method
@@ -92,8 +82,14 @@ module ForwardProxy
       end
     end
 
+    def transfer(dest_conn, src_conn)
+      IO.copy_stream(src_conn, dest_conn)
+    rescue => e
+      log(e.message, "WARNING")
+    end
+
     def parse_req(conn)
-      req = WEBrick::HTTPRequest.new(WEBrick::Config::HTTP).tap do |req|
+      WEBrick::HTTPRequest.new(WEBrick::Config::HTTP).tap do |req|
         req.parse(conn)
       end
     end
