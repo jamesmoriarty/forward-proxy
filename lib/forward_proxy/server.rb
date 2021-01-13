@@ -1,3 +1,4 @@
+require 'forward_proxy/thread_pool'
 require 'socket'
 require 'webrick'
 require 'net/http'
@@ -6,9 +7,10 @@ module ForwardProxy
   class HTTPMethodNotImplemented < StandardError; end
 
   class Server
-    attr_reader :bind_address, :bind_port
+    attr_reader :bind_address, :bind_port, :thread_pool
 
-    def initialize(bind_address: "127.0.0.1", bind_port: 9292)
+    def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 32)
+      @thread_pool = ThreadPool.new(threads)
       @bind_address = bind_address
       @bind_port = bind_port
     end
@@ -16,12 +18,14 @@ module ForwardProxy
     def start
       @server = TCPServer.new(bind_address, bind_port)
 
+      thread_pool.start
+
       log("Listening #{bind_address}:#{bind_port}")
 
       loop do
         client = @server.accept
 
-        Thread.start(client) do |client_conn|
+        thread_pool.schedule(client) do |client_conn|
           begin
             req = parse_req(client_conn)
 
@@ -41,10 +45,14 @@ module ForwardProxy
           end
         end
       end
+    rescue Interrupt
     end
 
     def shutdown
-      log("Exiting...")
+      log("Closing client connections...")
+      thread_pool.shutdown
+
+      log("Stoping server...")
       @server.close if @server
     end
 
