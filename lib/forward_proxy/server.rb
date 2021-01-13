@@ -6,15 +6,17 @@ module ForwardProxy
   class HTTPMethodNotImplemented < StandardError; end
 
   class Server
-    def initialize(hostname: "127.0.0.1", port: 9292)
-      @hostname = hostname
-      @port = port
+    attr_reader :bind_address, :bind_port
+
+    def initialize(bind_address: "127.0.0.1", bind_port: 9292)
+      @bind_address = bind_address
+      @bind_port = bind_port
     end
 
     def start
-      @server = TCPServer.new(@hostname, @port)
+      @server = TCPServer.new(bind_address, bind_port)
 
-      log("Listening #{@hostname}:#{@port}")
+      log("Listening #{bind_address}:#{bind_port}")
 
       loop do
         client = @server.accept
