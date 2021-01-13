@@ -3,7 +3,7 @@ require 'net/http'
 
 # https_proxy=http://127.0.0.1:9292 curl -v https://google.com
 def handle_tunnel(req)
-  [501, {"Content-Type" => "text/html"}, ["Not Implemented"]]
+  [501, { "Content-Type" => "text/html" }, ["Not Implemented"]]
 end
 
 # http_proxy=http://127.0.0.1:9292 curl -v http://google.com
@@ -30,7 +30,7 @@ proxy = proc do |env|
 
     pp(req)
 
-    [502, {"Content-Type" => "text/html"}, ["Bad Gateway"]]
+    [502, { "Content-Type" => "text/html" }, ["Bad Gateway"]]
   end
 end
 

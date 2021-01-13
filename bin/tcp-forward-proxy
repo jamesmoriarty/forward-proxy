@@ -12,27 +12,25 @@ module ForwardProxy
       server = TCPServer.new(port)
 
       log("Listening :#{port}")
-      
+
       loop do
         client = server.accept
 
         Thread.start(client) do |conn|
           begin
             req = parse_req(conn)
-        
+
             log(req.request_line)
-      
+
             case req.request_method
-            when "CONNECT"
-              handle_tunnel(conn, req)
-            when "GET", "POST"
-              handle(conn, req)
+            when "CONNECT" then handle_tunnel(conn, req)
+            when "GET", "POST" then handle(conn, req)
             else
               raise HTTPMethodNotImplementedError
             end
           rescue => e
             puts e.message
-            puts e.backtrace.map { |line| "  #{line}"}
+            puts e.backtrace.map { |line| "  #{line}" }
           ensure
             conn.close
           end
@@ -47,10 +45,7 @@ module ForwardProxy
       dest_conn = TCPSocket.new(host, port)
 
       # https://tools.ietf.org/html/rfc7231#section-4.3.6
-      client_conn.write <<~eos
-      HTTP/1.1 200 OK
-
-      eos
+      client_conn.write "HTTP/1.1 200 OK\n\n"
 
       [
         Thread.new { transfer(client_conn, dest_conn) },
@@ -64,22 +59,24 @@ module ForwardProxy
       end
 
       conn.puts <<~eos.chomp
-      HTTP/1.1 #{resp.code}
-      #{resp.each.map { |header, value| "#{header}: #{value}" }.join("\n")}
+        HTTP/1.1 #{resp.code}
+        #{resp.each.map { |header, value| "#{header}: #{value}" }.join("\n")}
 
-      #{resp.body}
+        #{resp.body}
       eos
     end
 
     def map_webrick_to_net_http_req(req)
-      req_headers = Hash[req.header.map { |k,v| [k,v.first] }]
+      req_headers = Hash[req.header.map { |k, v| [k, v.first] }]
 
-      case req.request_method
-      when "GET"
-        Net::HTTP::Get.new(req.path, req_headers)
-      else
-        raise HTTPMethodNotImplementedError
-      end
+      klass = case req.request_method
+              when "GET" then Net::HTTP::Get
+              when "POST" then Net::HTTP::Post
+              else
+                raise HTTPMethodNotImplementedError
+              end
+
+      klass.new(req.path, req_headers)
     end
 
     def transfer(dest_conn, src_conn)
