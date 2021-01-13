@@ -102,8 +102,14 @@ module ForwardProxy
         http.request map_webrick_to_net_http_req(req)
       end
 
+      # A proxy MUST send an appropriate Via header field, as described
+      # below, in each message that it forwards.  An HTTP-to-HTTP gateway
+      # MUST send an appropriate Via header field in each inbound request
+      # message and MAY send a Via header field in forwarded response
+      # messages.
       client_conn.puts <<~eos.chomp
         HTTP/1.1 #{resp.code}
+        Via: #{["1.1 ForwardProxy", resp['Via']].compact.join(', ')}
         #{resp.each.map { |header, value| "#{header}: #{value}" }.join("\n")}
 
         #{resp.body}
