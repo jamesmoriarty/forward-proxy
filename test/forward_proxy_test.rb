@@ -16,6 +16,7 @@ class ForwardProxyTest < Minitest::Test
   def test_handle
     proxy(URI('http://google.com')) do |resp|
       assert_equal "301", resp.code
+      assert_equal "1.1 ForwardProxy", resp['via']
       assert_equal "http://www.google.com/", resp['location']
       body = <<~eos
         <HTML><HEAD><meta http-equiv="content-type" content="text/html;charset=utf-8">
