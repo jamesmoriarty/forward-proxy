@@ -11,7 +11,7 @@ class ForwardProxyTest < Minitest::Test
     hostname = "127.0.0.1"
     port = 3000
 
-    server = ForwardProxy::Server.new(hostname: hostname, port: port)
+    server = ForwardProxy::Server.new(bind_address: hostname, bind_port: port)
 
     Thread.new { server.start }
 
