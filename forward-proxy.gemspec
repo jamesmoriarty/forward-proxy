@@ -6,13 +6,11 @@ Gem::Specification.new do |spec|
   spec.authors       = ["James Moriarty"]
   spec.email         = ["jamespaulmoriarty@gmail.com"]
 
-  spec.summary       = %q{Forward Proxy.}
-  spec.description   = %q{Forward Proxy using just Ruby standard libraries.}
+  spec.summary       = %q{Forward proxy.}
+  spec.description   = %q{Forward proxy using just Ruby standard libraries.}
   spec.homepage      = "https://github.com/jamesmoriarty/forward-proxy"
   spec.license       = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
-
-  spec.metadata["allowed_push_host"] = "TODO: Set to 'http://mygemserver.com'"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/jamesmoriarty/forward-proxy"
