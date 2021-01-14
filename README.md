@@ -42,7 +42,7 @@ Usage: forward-proxy [options]
 
 ### Library
 
-```
+```ruby
 require 'forward_proxy'
 
 proxy = ForwardProxy::Server.new(
