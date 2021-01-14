@@ -1,5 +1,7 @@
 # ForwardProxy
 
+![Gem Version][3] ![Gem][1] ![Build Status][2]
+
 Ruby Forward Proxy implemented with only standard libraries.
 
 ```
@@ -70,3 +72,7 @@ The gem is available as open source under the terms of the [MIT License](https:/
 ## Code of Conduct
 
 Everyone interacting in the ForwardProxy project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/jamesmoriarty/forward-proxy/blob/master/CODE_OF_CONDUCT.md).
+
+[1]: https://img.shields.io/gem/dt/forward-proxy
+[2]: https://github.com/jamesmoriarty/forward-proxy/workflows/Continuous%20Integration/badge.svg?branch=main
+[3]: https://img.shields.io/gem/v/forward-proxy
