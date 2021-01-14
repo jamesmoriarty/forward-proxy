@@ -1,6 +1,6 @@
 # ForwardProxy
 
-Ruby Forward Proxy implemented with only standard library.
+Ruby Forward Proxy implemented with only standard libraries.
 
 ```
 $ forward-proxy --binding 0.0.0.0 --port 3182 --threads 2
