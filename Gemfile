@@ -5,5 +5,5 @@ gemspec
 
 gem "rake", "~> 12.0"
 gem "minitest", "~> 5.0"
-gem "minitest-reporters"
-gem "simplecov"
+gem "minitest-reporters", "~> 1.4"
+gem "simplecov", "~> 0.17"
