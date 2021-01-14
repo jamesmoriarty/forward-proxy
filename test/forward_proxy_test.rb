@@ -1,29 +1,6 @@
 require "test_helper"
 
 class ForwardProxyTest < Minitest::Test
-  def request(uri, req = Net::HTTP::Get.new(uri))
-    proxy = ForwardProxy::Server.new(
-      bind_address: "127.0.0.1",
-      bind_port: 3000
-    )
-
-    Thread.new { proxy.start }
-
-    sleep 1
-
-    Net::HTTP.start(
-      uri.hostname,
-      uri.port,
-      proxy.bind_address,
-      proxy.bind_port,
-      use_ssl: uri.scheme == 'https'
-    ) do |http|
-      yield http.request req
-    end
-
-    proxy.shutdown
-  end
-
   def test_handle
     request(URI('http://google.com')) do |resp|
       assert_equal "301", resp.code
