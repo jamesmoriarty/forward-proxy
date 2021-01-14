@@ -1,7 +1,7 @@
 require "test_helper"
 
 class ForwardProxyTest < Minitest::Test
-  def get(uri)
+  def request(uri, req = Net::HTTP::Get.new(uri))
     proxy = ForwardProxy::Server.new(
       bind_address: "127.0.0.1",
       bind_port: 3000
@@ -18,14 +18,14 @@ class ForwardProxyTest < Minitest::Test
       proxy.bind_port,
       use_ssl: uri.scheme == 'https'
     ) do |http|
-      yield http.request Net::HTTP::Get.new(uri)
+      yield http.request req
     end
 
     proxy.shutdown
   end
 
   def test_handle
-    get(URI('http://google.com')) do |resp|
+    request(URI('http://google.com')) do |resp|
       assert_equal "301", resp.code
       assert_equal "1.1 ForwardProxy", resp['via']
       assert_equal "http://www.google.com/", resp['location']
@@ -41,8 +41,16 @@ class ForwardProxyTest < Minitest::Test
     end
   end
 
+  def test_handle_with_unsupported_method
+    uri = URI('http://google.com')
+
+    request(uri, Net::HTTP::Trace.new(uri)) do |resp|
+      assert_equal "502", resp.code
+    end
+  end
+
   def test_handle_tunnel
-    get(URI('https://google.com')) do |resp|
+    request(URI('https://google.com')) do |resp|
       assert_equal "301", resp.code
       assert_equal "https://www.google.com/", resp['location']
       body = <<~eos

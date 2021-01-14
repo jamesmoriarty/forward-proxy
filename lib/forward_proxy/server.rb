@@ -7,7 +7,7 @@ module ForwardProxy
   class HTTPMethodNotImplemented < StandardError; end
 
   class Server
-    attr_reader :bind_address, :bind_port, :thread_pool
+    attr_reader :bind_address, :bind_port
 
     def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 32)
       @thread_pool = ThreadPool.new(threads)
@@ -23,7 +23,7 @@ module ForwardProxy
       log("Listening #{bind_address}:#{bind_port}")
 
       loop do
-        client = @server.accept
+        client = server.accept
 
         thread_pool.schedule(client) do |client_conn|
           begin
@@ -38,6 +38,10 @@ module ForwardProxy
               raise HTTPMethodNotImplemented
             end
           rescue => e
+            client_conn.puts <<~eos.chomp
+              HTTP/1.1 502
+            eos
+
             puts e.message
             puts e.backtrace.map { |line| "  #{line}" }
           ensure
@@ -53,10 +57,12 @@ module ForwardProxy
       thread_pool.shutdown
 
       log("Stoping server...")
-      @server.close if @server
+      server.close if server
     end
 
     private
+
+    attr_reader :server, :thread_pool
 
     METHOD_CONNECT = "CONNECT"
     METHOD_GET = "GET"

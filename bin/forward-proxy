@@ -1,6 +1,0 @@
-#!/usr/bin/env ruby
-
-require_relative '../lib/forward_proxy'
-
-server = ForwardProxy::Server.new
-server.start
