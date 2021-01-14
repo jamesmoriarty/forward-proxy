@@ -37,9 +37,9 @@ forward-proxy
 ```
 Usage: forward-proxy [options]
     -p, --port=PORT                  Bind to specified port. Default: 9292
-    -b, --binding=BINDING            Bind to the specified IP. Default: 127.0.0.1
+    -b, --binding=BINDING            Bind to the specified ip. Default: 127.0.0.1
     -t, --threads=THREADS            Specify the number of client threads. Default: 32
-    -h, --help                       Prints this help
+    -h, --help                       Prints this help.
 ```
 
 ### Library

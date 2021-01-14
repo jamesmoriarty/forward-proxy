@@ -11,7 +11,7 @@ OptionParser.new do |parser|
     options[:bind_port] = bind_port
   end
 
-  parser.on("-bBINDING", "--binding=BINDING", String, "Bind to the specified IP. Default: 127.0.0.1") do |bind_address|
+  parser.on("-bBINDING", "--binding=BINDING", String, "Bind to the specified ip. Default: 127.0.0.1") do |bind_address|
     options[:bind_address] = bind_address
   end
 
@@ -19,7 +19,7 @@ OptionParser.new do |parser|
     options[:threads] = threads
   end
 
-  parser.on("-h", "--help", "Prints this help") do
+  parser.on("-h", "--help", "Prints this help.") do
     puts parser
     exit
   end
