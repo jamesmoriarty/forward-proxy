@@ -1,8 +1,12 @@
 # ForwardProxy
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/forward/proxy`. To experiment with that code, run `bin/console` for an interactive prompt.
+Ruby Forward Proxy implemented with only standard library.
 
-TODO: Delete this and the text above, and describe your gem
+```
+$ forward-proxy --binding 0.0.0.0 --port 3182 --threads 2
+[2021-01-14 19:37:47 +1100] INFO Listening 0.0.0.0:3182
+[2021-01-14 19:38:24 +1100] INFO CONNECT raw.githubusercontent.com:443 HTTP/1.1
+```
 
 ## Installation
 
@@ -22,7 +26,32 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### CLI
+
+```
+forward-proxy
+```
+
+```
+Usage: forward-proxy [options]
+    -p, --port=PORT                  Bind to specified port. Default: 9292
+    -b, --binding=BINDING            Bind to the specified IP. Default: 127.0.0.1
+    -t, --threads=THREADS            Specify the number of client threads. Default: 32
+    -h, --help                       Prints this help
+```
+
+### Library
+
+```
+require 'forward_proxy'
+
+proxy = ForwardProxy::Server.new(
+  bind_address: "127.0.0.1",
+  bind_port: 3000
+)
+
+proxy.start
+```
 
 ## Development
 
@@ -33,7 +62,6 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/forward-proxy. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/forward-proxy/blob/master/CODE_OF_CONDUCT.md).
-
 
 ## License
 

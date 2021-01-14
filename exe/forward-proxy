@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+options = {}
+
+OptionParser.new do |parser|
+  parser.banner = "Usage: forward-proxy [options]"
+
+  parser.on("-pPORT", "--port=PORT", "Bind to specified port. Default: 9292", String) do |bind_port|
+    options[:bind_port] = bind_port
+  end
+
+  parser.on("-bBINDING", "--binding=BINDING", String, "Bind to the specified IP. Default: 127.0.0.1") do |bind_address|
+    options[:bind_address] = bind_address
+  end
+
+  parser.on("-tTHREADS", "--threads=THREADS", Integer, "Specify the number of client threads. Default: 32") do |threads|
+    options[:threads] = threads
+  end
+
+  parser.on("-h", "--help", "Prints this help") do
+    puts parser
+    exit
+  end
+end.parse!
+
+require_relative '../lib/forward_proxy'
+
+server = ForwardProxy::Server.new(options)
+server.start
