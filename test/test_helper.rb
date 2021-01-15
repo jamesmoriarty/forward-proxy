@@ -30,6 +30,4 @@ def request(uri, req = Net::HTTP::Get.new(uri))
   end
 
   proxy.shutdown
-
-  proxy_thread.join
 end
