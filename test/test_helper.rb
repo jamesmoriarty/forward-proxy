@@ -17,7 +17,7 @@ def request(uri, req = Net::HTTP::Get.new(uri))
 
   proxy_thread = Thread.new { proxy.start }
 
-  sleep 1
+  sleep 0.050 # 50ms
 
   Net::HTTP.start(
     uri.hostname,
