@@ -23,6 +23,7 @@ class ForwardProxyTest < Minitest::Test
 
     request(uri, Net::HTTP::Trace.new(uri)) do |resp|
       assert_equal "502", resp.code
+      assert_equal "ForwardProxy", resp['server']
     end
   end
 

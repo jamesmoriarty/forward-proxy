@@ -5,6 +5,7 @@ require 'net/http'
 
 module ForwardProxy
   class HTTPMethodNotImplemented < StandardError; end
+  class HTTPParseError < StandardError; end
 
   class Server
     attr_reader :bind_address, :bind_port
@@ -16,16 +17,21 @@ module ForwardProxy
     end
 
     def start
-      @server = TCPServer.new(bind_address, bind_port)
-
       thread_pool.start
+
+      @server = TCPServer.new(bind_address, bind_port)
 
       log("Listening #{bind_address}:#{bind_port}")
 
       loop do
-        client = server.accept
-
-        thread_pool.schedule(client) do |client_conn|
+        # The following comments are from "man 2 accept"
+        #
+        # The argument socket is a socket that has been created with socket(2), bound to an address with bind(2), and is listening for connections after a listen(2).  accept() extracts the
+        # first connection request on the queue of pending connections, creates a new socket with the same properties of socket, and allocates a new file descriptor for the socket.  If no
+        # pending connections are present on the queue, and the socket is not marked as non-blocking, accept() blocks the caller until a connection is present.  If the socket is marked
+        # non-blocking and no pending connections are present on the queue, accept() returns an error as described below.  The accepted socket may not be used to accept more connections.
+        # The original socket socket, remains open.
+        thread_pool.schedule(server.accept) do |client_conn|
           begin
             req = parse_req(client_conn)
 
@@ -40,6 +46,7 @@ module ForwardProxy
           rescue => e
             client_conn.puts <<~eos.chomp
               HTTP/1.1 502
+              Server: ForwardProxy
             eos
 
             puts e.message
@@ -50,6 +57,9 @@ module ForwardProxy
         end
       end
     rescue Interrupt
+      log("Exiting...")
+    rescue Errno::EBADF => e
+      log(e.message, "ERROR")
     end
 
     def shutdown
@@ -145,6 +155,8 @@ module ForwardProxy
       WEBrick::HTTPRequest.new(WEBrick::Config::HTTP).tap do |req|
         req.parse(client_conn)
       end
+    rescue => e
+      throw HTTPParseError.new(e.message)
     end
 
     def log(str, level = 'INFO')
