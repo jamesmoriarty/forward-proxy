@@ -24,13 +24,14 @@ module ForwardProxy
       log("Listening #{bind_address}:#{bind_port}")
 
       loop do
-        # The following comments are from "man 2 accept"
-        #
-        # The argument socket is a socket that has been created with socket(2), bound to an address with bind(2), and is listening for connections after a listen(2).  accept() extracts the
-        # first connection request on the queue of pending connections, creates a new socket with the same properties of socket, and allocates a new file descriptor for the socket.  If no
-        # pending connections are present on the queue, and the socket is not marked as non-blocking, accept() blocks the caller until a connection is present.  If the socket is marked
-        # non-blocking and no pending connections are present on the queue, accept() returns an error as described below.  The accepted socket may not be used to accept more connections.
-        # The original socket socket, remains open.
+        # The following comments are from https://stackoverflow.com/q/5124320/273101
+        # 
+        # accept(): POSIX.1-2001, POSIX.1-2008, SVr4, 4.4BSD (accept() first appeared in 4.2BSD).
+        # 
+        # We see that POSIX.1-2008 is a viable reference (check this for a description of relevant 
+        # standards for Linux systems). As already said in other answers, POSIX.1 standard specifies 
+        # accept function as (POSIX-)thread safe (as defined in Base Definitions, section 3.399 Thread Safe)
+        # by not listing it on System Interfaces, section 2.9.1 Thread Safety.
         thread_pool.schedule(server.accept) do |client_conn|
           begin
             req = parse_req(client_conn)
@@ -44,6 +45,13 @@ module ForwardProxy
               raise HTTPMethodNotImplemented
             end
           rescue => e
+            # The following comments are from the IETF document
+            # "Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content"
+            # https://tools.ietf.org/html/rfc7231#section-6.6.3
+
+            # The 502 (Bad Gateway) status code indicates that the server, while
+            # acting as a gateway or proxy, received an invalid response from an
+            # inbound server it accessed while attempting to fulfill the request.
             client_conn.puts <<~eos.chomp
               HTTP/1.1 502
               Server: ForwardProxy
@@ -117,6 +125,9 @@ module ForwardProxy
       resp = Net::HTTP.start(req.host, req.port) do |http|
         http.request map_webrick_to_net_http_req(req)
       end
+      # The following comments are from the IETF document
+      # "Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content"
+      # https://tools.ietf.org/html/rfc7231#section-4.3.6
 
       # A proxy MUST send an appropriate Via header field, as described
       # below, in each message that it forwards.  An HTTP-to-HTTP gateway
