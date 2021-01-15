@@ -58,7 +58,7 @@ module ForwardProxy
       end
     rescue Interrupt
       log("Exiting...")
-    rescue Errno::EBADF => e
+    rescue IOError, Errno::EBADF => e
       log(e.message, "ERROR")
     end
 
