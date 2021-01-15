@@ -25,11 +25,11 @@ module ForwardProxy
 
       loop do
         # The following comments are from https://stackoverflow.com/q/5124320/273101
-        # 
+        #
         # accept(): POSIX.1-2001, POSIX.1-2008, SVr4, 4.4BSD (accept() first appeared in 4.2BSD).
-        # 
-        # We see that POSIX.1-2008 is a viable reference (check this for a description of relevant 
-        # standards for Linux systems). As already said in other answers, POSIX.1 standard specifies 
+        #
+        # We see that POSIX.1-2008 is a viable reference (check this for a description of relevant
+        # standards for Linux systems). As already said in other answers, POSIX.1 standard specifies
         # accept function as (POSIX-)thread safe (as defined in Base Definitions, section 3.399 Thread Safe)
         # by not listing it on System Interfaces, section 2.9.1 Thread Safety.
         thread_pool.schedule(server.accept) do |client_conn|
