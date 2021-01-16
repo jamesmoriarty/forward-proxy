@@ -1,0 +1,25 @@
+name: Command Line Interface
+
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        ruby: [ '2.3', '2.7' ]
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+        bundler-cache: true
+    - run: gem install forward-proxy
+    - run: |
+        exe/forward-proxy --h
+        exe/forward-proxy --help
+        exe/forward-proxy --binding 127.0.0.1 --port 3001 --threads 2 &
+        sleep 1
+        curl --fail -x http://127.0.0.1:3001 https://google.com/
