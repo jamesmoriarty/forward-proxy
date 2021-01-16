@@ -71,7 +71,7 @@ module ForwardProxy
     end
 
     def shutdown
-      log("Closing client connections...")
+      log("Finishing client request...")
       thread_pool.shutdown
 
       log("Stoping server...")
