@@ -54,7 +54,7 @@ module ForwardProxy
             # inbound server it accessed while attempting to fulfill the request.
             client_conn.puts <<~eos.chomp
               HTTP/1.1 502
-              Server: ForwardProxy
+              Via: #{HEADER_VIA}
             eos
 
             puts e.message
@@ -85,6 +85,8 @@ module ForwardProxy
     METHOD_CONNECT = "CONNECT"
     METHOD_GET = "GET"
     METHOD_POST = "POST"
+
+    HEADER_VIA = "HTTP/1.1 ForwardProxy"
 
     def handle_tunnel(client_conn, req)
       # The following comments are from the IETF document
@@ -136,7 +138,7 @@ module ForwardProxy
       # messages.
       client_conn.puts <<~eos.chomp
         HTTP/1.1 #{resp.code}
-        Via: #{["1.1 ForwardProxy", resp['Via']].compact.join(', ')}
+        Via: #{[HEADER_VIA, resp['Via']].compact.join(', ')}
         #{resp.each.map { |header, value| "#{header}: #{value}" }.join("\n")}
 
         #{resp.body}
