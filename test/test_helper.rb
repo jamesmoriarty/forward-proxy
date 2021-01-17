@@ -9,10 +9,10 @@ Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
 require "minitest/autorun"
 
-def request(uri, req = Net::HTTP::Get.new(uri))
+def with_proxy(uri, bind_address: "127.0.0.1", bind_port: 3000, threads: 32)
   proxy = ForwardProxy::Server.new(
-    bind_address: "127.0.0.1",
-    bind_port: 3000
+    bind_address: bind_address,
+    bind_port: bind_port
   )
 
   proxy_thread = Thread.new { proxy.start }
@@ -26,7 +26,7 @@ def request(uri, req = Net::HTTP::Get.new(uri))
     proxy.bind_port,
     use_ssl: uri.scheme == 'https'
   ) do |http|
-    yield http.request req
+    yield http if block_given?
   end
 
   proxy.shutdown
