@@ -19,6 +19,14 @@ OptionParser.new do |parser|
     options[:threads] = threads
   end
 
+  parser.on("-uPROXY_USERNAME", "--proxy-username=PROXY_USERNAME", String, "Authenticate user") do |user|
+    options[:proxy_username] = user
+  end
+
+  parser.on("-pPROXY_PASSWORD", "--proxy-password=PROXY_Password", String, "Authenticate password") do |pwd|
+    options[:proxy_password] = pwd
+  end
+
   parser.on("-h", "--help", "Prints this help.") do
     puts parser
     exit

@@ -8,12 +8,14 @@ module ForwardProxy
   class HTTPParseError < StandardError; end
 
   class Server
-    attr_reader :bind_address, :bind_port
+    attr_reader :bind_address, :bind_port, :proxy_username, :proxy_password
 
-    def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 32)
+    def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 32, proxy_username: nil, proxy_password: nil)
       @thread_pool = ThreadPool.new(threads)
       @bind_address = bind_address
       @bind_port = bind_port
+      @proxy_username = proxy_username
+      @proxy_password = proxy_password
     end
 
     def start
@@ -35,6 +37,7 @@ module ForwardProxy
         thread_pool.schedule(server.accept) do |client_conn|
           begin
             req = parse_req(client_conn)
+            authenticate(req)
 
             log(req.request_line)
 
@@ -162,6 +165,19 @@ module ForwardProxy
       IO.copy_stream(src_conn, dest_conn)
     rescue => e
       log(e.message, "WARNING")
+    end
+
+    def authenticate(req)
+      if proxy_username && proxy_password
+        htpasswd = WEBrick::HTTPAuth::Htpasswd.new 'proxy_auth'
+        htpasswd.set_passwd 'proxy_auth', proxy_username, proxy_password
+
+        auth = WEBrick::HTTPAuth::ProxyBasicAuth.new(
+          :Realm => 'proxy_auth',
+          :UserDB => htpasswd
+        )
+        auth.authenticate(req, nil)
+      end
     end
 
     def parse_req(client_conn)
