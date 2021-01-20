@@ -65,15 +65,12 @@ module ForwardProxy
         end
       end
     rescue Interrupt
-      log("Exiting...")
+      shutdown
     rescue IOError, Errno::EBADF => e
       log(e.message, "ERROR")
     end
 
     def shutdown
-      log("Finishing client request...")
-      thread_pool.shutdown
-
       log("Stoping server...")
       server.close if server
     end
