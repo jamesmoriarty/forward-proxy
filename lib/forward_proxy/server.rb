@@ -65,15 +65,12 @@ module ForwardProxy
         end
       end
     rescue Interrupt
-      log("Exiting...")
+      shutdown
     rescue IOError, Errno::EBADF => e
       log(e.message, "ERROR")
     end
 
     def shutdown
-      log("Finishing client request...")
-      thread_pool.shutdown
-
       log("Stoping server...")
       server.close if server
     end
@@ -86,6 +83,15 @@ module ForwardProxy
     METHOD_GET = "GET"
     METHOD_POST = "POST"
 
+    # The following comments are from the IETF document
+    # "Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content"
+    # https://tools.ietf.org/html/rfc7231#section-4.3.6
+
+    # A proxy MUST send an appropriate Via header field, as described
+    # below, in each message that it forwards.  An HTTP-to-HTTP gateway
+    # MUST send an appropriate Via header field in each inbound request
+    # message and MAY send a Via header field in forwarded response
+    # messages.
     HEADER_VIA = "HTTP/1.1 ForwardProxy"
 
     def handle_tunnel(client_conn, req)
@@ -124,25 +130,19 @@ module ForwardProxy
     end
 
     def handle(client_conn, req)
-      resp = Net::HTTP.start(req.host, req.port) do |http|
-        http.request map_webrick_to_net_http_req(req)
+      Net::HTTP.start(req.host, req.port) do |http|
+        http.request(map_webrick_to_net_http_req(req)) do |resp|
+          client_conn.puts <<~eos.chomp
+            HTTP/1.1 #{resp.code}
+            Via: #{[HEADER_VIA, resp['Via']].compact.join(', ')}
+            #{resp.each.map { |header, value| "#{header}: #{value}" }.join("\n")}\n\n
+          eos
+
+          resp.read_body do |chunk|
+            client_conn << chunk
+          end
+        end
       end
-      # The following comments are from the IETF document
-      # "Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content"
-      # https://tools.ietf.org/html/rfc7231#section-4.3.6
-
-      # A proxy MUST send an appropriate Via header field, as described
-      # below, in each message that it forwards.  An HTTP-to-HTTP gateway
-      # MUST send an appropriate Via header field in each inbound request
-      # message and MAY send a Via header field in forwarded response
-      # messages.
-      client_conn.puts <<~eos.chomp
-        HTTP/1.1 #{resp.code}
-        Via: #{[HEADER_VIA, resp['Via']].compact.join(', ')}
-        #{resp.each.map { |header, value| "#{header}: #{value}" }.join("\n")}
-
-        #{resp.body}
-      eos
     end
 
     def map_webrick_to_net_http_req(req)
