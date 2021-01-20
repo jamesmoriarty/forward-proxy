@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.1.5
+
+- stream http proxy requests.
+- call shutdown on `Interrupt`
+- remove waiting for the thread-pool to finish on shutdown and just close the server conn.
+
 ## 0.1.4
 
 - `accept` connections via thread pool.
