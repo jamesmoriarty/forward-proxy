@@ -2,7 +2,7 @@
 
 ![Gem Version][3] ![Gem][1] ![Build Status][2]
 
-100 LOC Ruby forward proxy using only standard libraries.
+150 LOC Ruby forward proxy using only standard libraries.
 
 ```
 $ forward-proxy --binding 0.0.0.0 --port 3182 --threads 2
