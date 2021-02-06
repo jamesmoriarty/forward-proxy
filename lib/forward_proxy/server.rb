@@ -159,7 +159,7 @@ module ForwardProxy
       klass.new(req.path, req_headers)
     end
 
-    def transfer(dest_conn, src_conn)
+    def transfer(src_conn, dest_conn)
       IO.copy_stream(src_conn, dest_conn)
     rescue => e
       log(e.message, "WARNING")
