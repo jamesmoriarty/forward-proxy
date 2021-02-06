@@ -72,6 +72,7 @@ module ForwardProxy
 
     def shutdown
       log("Stoping server...")
+
       server.close if server
     end
 

@@ -26,6 +26,5 @@ OptionParser.new do |parser|
 end.parse!
 
 require_relative '../lib/forward_proxy'
-
 server = ForwardProxy::Server.new(options)
 server.start
