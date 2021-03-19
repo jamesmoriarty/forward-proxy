@@ -7,7 +7,7 @@ options = {}
 OptionParser.new do |parser|
   parser.banner = "Usage: forward-proxy [options]"
 
-  parser.on("-pPORT", "--port=PORT", "Bind to specified port. Default: 9292", String) do |bind_port|
+  parser.on("-pPORT", "--port=PORT", String, "Bind to specified port. Default: 9292") do |bind_port|
     options[:bind_port] = bind_port
   end
 
