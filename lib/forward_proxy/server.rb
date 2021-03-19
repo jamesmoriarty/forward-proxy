@@ -19,7 +19,7 @@ module ForwardProxy
     def start
       thread_pool.start
 
-      @server = TCPServer.new(bind_address, bind_port)
+      @listen_socket = TCPServer.new(bind_address, bind_port)
 
       log("Listening #{bind_address}:#{bind_port}")
 
@@ -32,7 +32,7 @@ module ForwardProxy
         # standards for Linux systems). As already said in other answers, POSIX.1 standard specifies
         # accept function as (POSIX-)thread safe (as defined in Base Definitions, section 3.399 Thread Safe)
         # by not listing it on System Interfaces, section 2.9.1 Thread Safety.
-        thread_pool.schedule(server.accept) do |client_conn|
+        thread_pool.schedule(listen_socket.accept) do |client_conn|
           begin
             req = parse_req(client_conn)
 
@@ -71,14 +71,16 @@ module ForwardProxy
     end
 
     def shutdown
-      log("Stoping server...")
+      if listen_socket
+        log("Shutting down")
 
-      server.close if server
+        listen_socket.close 
+      end
     end
 
     private
 
-    attr_reader :server, :thread_pool
+    attr_reader :listen_socket, :thread_pool
 
     METHOD_CONNECT = "CONNECT"
     METHOD_GET = "GET"
@@ -139,6 +141,12 @@ module ForwardProxy
             #{resp.each.map { |header, value| "#{header}: #{value}" }.join("\n")}\n\n
           eos
 
+          # The following comments are taken from: 
+          # https://docs.ruby-lang.org/en/2.0.0/Net/HTTP.html#class-Net::HTTP-label-Streaming+Response+Bodies
+          
+          # By default Net::HTTP reads an entire response into memory. If you are
+          # handling large files or wish to implement a progress bar you can 
+          # instead stream the body directly to an IO.
           resp.read_body do |chunk|
             client_conn << chunk
           end
