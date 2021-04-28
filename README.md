@@ -2,7 +2,7 @@
 
 ![Gem Version][3] ![Gem][1] ![Build Status][2]
 
-150 LOC Ruby forward proxy using only standard libraries.
+Minimal forward proxy using 150LOC and only standard libraries. Useful for development, testing, and learning.
 
 ```
 $ forward-proxy --binding 0.0.0.0 --port 3182 --threads 2
