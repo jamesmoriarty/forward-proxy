@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.2.0
+
+- Extract errors into module.
+
 ## 0.1.5
 
 - stream http proxy requests.
