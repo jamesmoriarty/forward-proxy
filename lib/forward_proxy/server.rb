@@ -1,12 +1,11 @@
-require 'forward_proxy/thread_pool'
 require 'socket'
 require 'webrick'
 require 'net/http'
+require 'forward_proxy/errors/http_method_not_implemented'
+require 'forward_proxy/errors/http_parse_error'
+require 'forward_proxy/thread_pool'
 
 module ForwardProxy
-  class HTTPMethodNotImplemented < StandardError; end
-  class HTTPParseError < StandardError; end
-
   class Server
     attr_reader :bind_address, :bind_port
 
@@ -19,20 +18,12 @@ module ForwardProxy
     def start
       thread_pool.start
 
-      @listen_socket = TCPServer.new(bind_address, bind_port)
+      @socket = TCPServer.new(bind_address, bind_port)
 
       log("Listening #{bind_address}:#{bind_port}")
 
       loop do
-        # The following comments are from https://stackoverflow.com/q/5124320/273101
-        #
-        # accept(): POSIX.1-2001, POSIX.1-2008, SVr4, 4.4BSD (accept() first appeared in 4.2BSD).
-        #
-        # We see that POSIX.1-2008 is a viable reference (check this for a description of relevant
-        # standards for Linux systems). As already said in other answers, POSIX.1 standard specifies
-        # accept function as (POSIX-)thread safe (as defined in Base Definitions, section 3.399 Thread Safe)
-        # by not listing it on System Interfaces, section 2.9.1 Thread Safety.
-        thread_pool.schedule(listen_socket.accept) do |client_conn|
+        thread_pool.schedule(socket.accept) do |client_conn|
           begin
             req = parse_req(client_conn)
 
@@ -42,16 +33,9 @@ module ForwardProxy
             when METHOD_CONNECT then handle_tunnel(client_conn, req)
             when METHOD_GET, METHOD_POST then handle(client_conn, req)
             else
-              raise HTTPMethodNotImplemented
+              raise Errors::HTTPMethodNotImplemented
             end
           rescue => e
-            # The following comments are from the IETF document
-            # "Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content"
-            # https://tools.ietf.org/html/rfc7231#section-6.6.3
-
-            # The 502 (Bad Gateway) status code indicates that the server, while
-            # acting as a gateway or proxy, received an invalid response from an
-            # inbound server it accessed while attempting to fulfill the request.
             client_conn.puts <<~eos.chomp
               HTTP/1.1 502
               Via: #{HEADER_VIA}
@@ -71,16 +55,16 @@ module ForwardProxy
     end
 
     def shutdown
-      if listen_socket
+      if socket
         log("Shutting down")
 
-        listen_socket.close 
+        socket.close 
       end
     end
 
     private
 
-    attr_reader :listen_socket, :thread_pool
+    attr_reader :socket, :thread_pool
 
     METHOD_CONNECT = "CONNECT"
     METHOD_GET = "GET"
@@ -161,7 +145,7 @@ module ForwardProxy
               when METHOD_GET then Net::HTTP::Get
               when METHOD_POST then Net::HTTP::Post
               else
-                raise HTTPMethodNotImplemented
+                raise Errors::HTTPMethodNotImplemented
               end
 
       klass.new(req.path, req_headers)
@@ -178,7 +162,7 @@ module ForwardProxy
         req.parse(client_conn)
       end
     rescue => e
-      throw HTTPParseError.new(e.message)
+      throw Errors::HTTPParseError.new(e.message)
     end
 
     def log(str, level = 'INFO')
