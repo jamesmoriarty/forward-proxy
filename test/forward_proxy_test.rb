@@ -10,7 +10,6 @@ class ForwardProxyTest < Minitest::Test
 
         assert_equal "200", resp.code
         assert_equal "HTTP/1.1 ForwardProxy", resp['via']
-        assert_equal "200", resp.code
         assert_equal "hello world", resp.body
       end
     end
