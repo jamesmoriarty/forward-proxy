@@ -58,7 +58,7 @@ module ForwardProxy
       if socket
         log("Shutting down")
 
-        socket.close 
+        socket.close
       end
     end
 
@@ -125,11 +125,11 @@ module ForwardProxy
             #{resp.each.map { |header, value| "#{header}: #{value}" }.join("\n")}\n\n
           eos
 
-          # The following comments are taken from: 
+          # The following comments are taken from:
           # https://docs.ruby-lang.org/en/2.0.0/Net/HTTP.html#class-Net::HTTP-label-Streaming+Response+Bodies
-          
+
           # By default Net::HTTP reads an entire response into memory. If you are
-          # handling large files or wish to implement a progress bar you can 
+          # handling large files or wish to implement a progress bar you can
           # instead stream the body directly to an IO.
           resp.read_body do |chunk|
             client_conn << chunk
