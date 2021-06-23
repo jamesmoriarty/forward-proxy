@@ -9,6 +9,7 @@ class ForwardProxyTest < Minitest::Test
         resp = http.request Net::HTTP::Get.new(uri)
 
         assert_equal "200", resp.code
+        assert_match /WEBrick\//, resp['server']
         assert_equal "HTTP/1.1 ForwardProxy", resp['via']
         assert_equal "hello world", resp.body
       end
@@ -23,6 +24,7 @@ class ForwardProxyTest < Minitest::Test
         resp = http.request Net::HTTP::Post.new(uri)
 
         assert_equal "405", resp.code
+        assert_match /WEBrick\//, resp['server']
         assert_equal "HTTP/1.1 ForwardProxy", resp['via']
         refute_nil resp.body
       end
@@ -50,6 +52,7 @@ class ForwardProxyTest < Minitest::Test
         resp = http.request Net::HTTP::Get.new(uri)
 
         assert_equal "200", resp.code
+        assert_match /WEBrick\//, resp['server']
         assert_equal "hello world", resp.body
       end
     end
