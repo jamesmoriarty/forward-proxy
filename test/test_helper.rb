@@ -68,25 +68,19 @@ def cert
 end
 
 def with_dest(https: false, bind_address: '127.0.0.1', bind_port: 8000, path: Dir.pwd)
-  options = case https
-            when true
-              {
-                BindAddress: bind_address,
-                Port: bind_port,
-                DocumentRoot: path,
-                SSLEnable: true,
-                SSLVerifyClient: OpenSSL::SSL::VERIFY_NONE,
-                SSLCertificate: cert,
-                SSLPrivateKey: key,
-                SSLCertName: [["CN", WEBrick::Utils::getservername]]
-              }
-            else
-              {
-                BindAddress: bind_address,
-                Port: bind_port,
-                DocumentRoot: path
-              }
-            end
+  options = {
+    BindAddress: bind_address,
+    Port: bind_port,
+    DocumentRoot: path
+  }
+
+  options.merge!(
+    SSLEnable: true,
+    SSLVerifyClient: OpenSSL::SSL::VERIFY_NONE,
+    SSLCertificate: cert,
+    SSLPrivateKey: key,
+    SSLCertName: [["CN", WEBrick::Utils::getservername]]
+  ) if https
 
   server = WEBrick::HTTPServer.new(options)
 
