@@ -1,14 +1,15 @@
 require 'openssl'
 require 'webrick'
 require 'webrick/https'
+
+require "minitest/reporters"
+Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
+
 require 'simplecov'
 SimpleCov.start
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "forward_proxy"
-
-require "minitest/reporters"
-Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
 require "minitest/autorun"
 
@@ -66,21 +67,28 @@ def cert
   end
 end
 
-def with_dest(https: false)
-  server = case https
-           when true
-             WEBrick::HTTPServer.new(
-               Port: 8000,
-               DocumentRoot: Dir.pwd,
-               SSLEnable: true,
-               SSLVerifyClient: OpenSSL::SSL::VERIFY_NONE,
-               SSLCertificate: cert,
-               SSLPrivateKey: key,
-               SSLCertName: [["CN", WEBrick::Utils::getservername]]
-             )
-           else
-             WEBrick::HTTPServer.new(Port: 8000, DocumentRoot: Dir.pwd)
-           end
+def with_dest(https: false, bind_address: '127.0.0.1', bind_port: 8000, path: Dir.pwd)
+  options = case https
+            when true
+              {
+                BindAddress: bind_address,
+                Port: bind_port,
+                DocumentRoot: path,
+                SSLEnable: true,
+                SSLVerifyClient: OpenSSL::SSL::VERIFY_NONE,
+                SSLCertificate: cert,
+                SSLPrivateKey: key,
+                SSLCertName: [["CN", WEBrick::Utils::getservername]]
+              }
+            else
+              {
+                BindAddress: bind_address,
+                Port: bind_port,
+                DocumentRoot: path
+              }
+            end
+
+  server = WEBrick::HTTPServer.new(options)
 
   server_thread = Thread.new { server.start }
 
