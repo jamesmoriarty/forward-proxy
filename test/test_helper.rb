@@ -85,11 +85,11 @@ def cert
   end
 end
 
-def with_dest(https: false, bind_address: '127.0.0.1', bind_port: 8000, path: Dir.pwd)
+def with_dest(uri, https: false)
   options = {
-    BindAddress: bind_address,
-    Port: bind_port,
-    DocumentRoot: path
+    BindAddress: uri.host,
+    Port: uri.port,
+    DocumentRoot: Dir.pwd
   }
 
   options.merge!(
