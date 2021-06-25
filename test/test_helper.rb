@@ -37,7 +37,24 @@ def root_ca
       root_ca.add_extension(ef.create_extension("subjectKeyIdentifier", "hash", false))
       root_ca.add_extension(ef.create_extension("authorityKeyIdentifier", "keyid:always", false))
       root_ca.sign(root_key, OpenSSL::Digest::SHA256.new)
+
+      add_trusted_cert(root_ca)
     end
+  end
+end
+
+def add_trusted_cert(cert)
+  case RUBY_PLATFORM
+  when /linux/
+    IO::write("/tmp/Ruby-CA.crt", cert.to_s)
+    `sudo cp /tmp/Ruby-CA.crt /usr/local/share/ca-certificates/Ruby-CA.crt`
+    `sudo update-ca-certificates`
+  when /darwin/
+    IO::write("/tmp/Ruby-CA.crt", cert.to_s)
+    `sudo security delete-certificate -c 'Ruby CA'`
+    `sudo security add-trusted-cert -d -r trustRoot -k "/Library/Keychains/System.keychain" /tmp/Ruby-CA.crt`
+  else
+    throw "#{RUBY_PLATFORM}: unexpected platform"
   end
 end
 
@@ -52,7 +69,7 @@ def cert
     OpenSSL::X509::Certificate.new.tap do |cert|
       cert.version = 2
       cert.serial = 2
-      cert.subject = OpenSSL::X509::Name.parse "/DC=org/DC=ruby-lang/CN=Ruby certificate"
+      cert.subject = OpenSSL::X509::Name.parse "/DC=org/DC=ruby-lang/CN=Ruby Certificate"
       cert.issuer = root_ca.subject # root CA is the issuer
       cert.public_key = key.public_key
       cert.not_before = Time.now
@@ -62,21 +79,21 @@ def cert
       ef.issuer_certificate = root_ca
       cert.add_extension(ef.create_extension("keyUsage", "digitalSignature", true))
       cert.add_extension(ef.create_extension("subjectKeyIdentifier", "hash", false))
+      cert.add_extension(ef.create_extension("subjectAltName", "IP:127.0.0.1, DNS:localhost, DNS:#{WEBrick::Utils::getservername()}", false))
       cert.sign(root_key, OpenSSL::Digest::SHA256.new)
     end
   end
 end
 
-def with_dest(https: false, bind_address: '127.0.0.1', bind_port: 8000, path: Dir.pwd)
+def with_dest(uri, https: false)
   options = {
-    BindAddress: bind_address,
-    Port: bind_port,
-    DocumentRoot: path
+    BindAddress: uri.host,
+    Port: uri.port,
+    DocumentRoot: Dir.pwd
   }
 
   options.merge!(
     SSLEnable: true,
-    SSLVerifyClient: OpenSSL::SSL::VERIFY_NONE,
     SSLCertificate: cert,
     SSLPrivateKey: key,
     SSLCertName: [["CN", WEBrick::Utils::getservername]]
@@ -110,8 +127,7 @@ def with_proxy(uri, bind_address: "127.0.0.1", bind_port: 3000, threads: 32)
     uri.port,
     proxy.bind_address,
     proxy.bind_port,
-    use_ssl: uri.scheme == 'https',
-    verify_mode: OpenSSL::SSL::VERIFY_NONE
+    use_ssl: uri.scheme == 'https'
   ) do |http|
     yield http if block_given?
   end
