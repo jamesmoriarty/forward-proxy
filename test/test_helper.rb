@@ -44,13 +44,13 @@ def root_ca
 end
 
 def add_trusted_cert(cert)
+  File.write("/tmp/Ruby-CA.crt", cert.to_s)
+
   case RUBY_PLATFORM
   when /linux/
-    IO::write("/tmp/Ruby-CA.crt", cert.to_s)
     `sudo cp /tmp/Ruby-CA.crt /usr/local/share/ca-certificates/Ruby-CA.crt`
     `sudo update-ca-certificates`
   when /darwin/
-    IO::write("/tmp/Ruby-CA.crt", cert.to_s)
     `sudo security delete-certificate -c 'Ruby CA'`
     `sudo security add-trusted-cert -d -r trustRoot -k "/Library/Keychains/System.keychain" /tmp/Ruby-CA.crt`
   else
@@ -64,7 +64,7 @@ def key
   end
 end
 
-def cert
+def cert(domains: ["IP:127.0.0.1", "DNS:localhost", "DNS:#{WEBrick::Utils::getservername()}"])
   @cert ||= begin
     OpenSSL::X509::Certificate.new.tap do |cert|
       cert.version = 2
@@ -79,7 +79,8 @@ def cert
       ef.issuer_certificate = root_ca
       cert.add_extension(ef.create_extension("keyUsage", "digitalSignature", true))
       cert.add_extension(ef.create_extension("subjectKeyIdentifier", "hash", false))
-      cert.add_extension(ef.create_extension("subjectAltName", "IP:127.0.0.1, DNS:localhost, DNS:#{WEBrick::Utils::getservername()}", false))
+      cert.add_extension(ef.create_extension("subjectAltName",
+                                             domains.join(" ,"), false))
       cert.sign(root_key, OpenSSL::Digest::SHA256.new)
     end
   end
