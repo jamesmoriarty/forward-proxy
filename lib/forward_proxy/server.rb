@@ -139,7 +139,7 @@ module ForwardProxy
         Via: #{HEADER_VIA}
       eos
 
-      puts err.message
+      log(err.message, "ERROR")
       puts err.backtrace.map { |line| "  #{line}" }
     end
 
