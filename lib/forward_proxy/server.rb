@@ -113,10 +113,11 @@ module ForwardProxy
     def handle(client_conn, req)
       Net::HTTP.start(req.host, req.port) do |http|
         http.request(map_webrick_to_net_http_req(req)) do |resp|
+          headers= resp.to_hash.merge(Via: [HEADER_VIA, resp['Via']].compact.join(', '))
+
           client_conn.puts <<~eos.chomp
             HTTP/1.1 #{resp.code}
-            Via: #{[HEADER_VIA, resp['Via']].compact.join(', ')}
-            #{resp.each.map { |header, value| "#{header}: #{value}" }.join("\n")}\n\n
+            #{headers.map { |header, value| "#{header}: #{value}" }.join("\n")}\n\n
           eos
 
           # The following comments are taken from:
