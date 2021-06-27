@@ -35,14 +35,8 @@ module ForwardProxy
             else
               raise Errors::HTTPMethodNotImplemented
             end
-          rescue => e
-            client_conn.puts <<~eos.chomp
-              HTTP/1.1 502
-              Via: #{HEADER_VIA}
-            eos
-
-            puts e.message
-            puts e.backtrace.map { |line| "  #{line}" }
+          rescue => err
+            handle_error(err, client_conn)
           ensure
             client_conn.close
           end
@@ -136,6 +130,16 @@ module ForwardProxy
           end
         end
       end
+    end
+
+    def handle_error(err, client_conn)
+      client_conn.puts <<~eos.chomp
+        HTTP/1.1 502
+        Via: #{HEADER_VIA}
+      eos
+
+      puts err.message
+      puts err.backtrace.map { |line| "  #{line}" }
     end
 
     def map_webrick_to_net_http_req(req)

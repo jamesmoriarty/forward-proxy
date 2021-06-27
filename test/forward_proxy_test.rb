@@ -26,7 +26,7 @@ class ForwardProxyTest < Minitest::Test
         assert_equal "405", resp.code
         assert_match /WEBrick\//, resp['server']
         assert_equal "HTTP/1.1 ForwardProxy", resp['via']
-        refute_nil resp.body
+        assert_match /Method Not Allowed/, resp.body
       end
     end
   end
@@ -40,6 +40,7 @@ class ForwardProxyTest < Minitest::Test
 
         assert_equal "502", resp.code
         assert_equal "HTTP/1.1 ForwardProxy", resp['via']
+        assert_equal "", resp.body
       end
     end
   end
