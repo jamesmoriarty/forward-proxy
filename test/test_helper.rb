@@ -86,7 +86,7 @@ def cert(domains: ["IP:127.0.0.1", "DNS:localhost", "DNS:#{WEBrick::Utils::getse
   end
 end
 
-def with_dest(uri, https: false)
+def with_dest(uri)
   options = {
     BindAddress: uri.host,
     Port: uri.port,
@@ -98,7 +98,7 @@ def with_dest(uri, https: false)
     SSLCertificate: cert,
     SSLPrivateKey: key,
     SSLCertName: [["CN", WEBrick::Utils::getservername]]
-  ) if https
+  ) if uri.scheme == 'https'
 
   server = WEBrick::HTTPServer.new(options)
 

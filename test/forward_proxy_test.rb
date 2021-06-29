@@ -48,7 +48,7 @@ class ForwardProxyTest < Minitest::Test
   def test_handle_tunnel
     uri = URI('https://127.0.0.1:8000/test/index.txt')
 
-    with_dest(uri, https: true) do
+    with_dest(uri) do
       with_proxy(uri) do |http|
         resp = http.request Net::HTTP::Get.new(uri)
 

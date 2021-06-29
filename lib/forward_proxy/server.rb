@@ -131,7 +131,7 @@ module ForwardProxy
           #  under the same organizational control and the hosts have already been
           #  replaced by pseudonyms.  A sender MUST NOT combine entries that have
           #  different received-protocol values.
-          headers= resp.to_hash.merge(Via: [HEADER_VIA, resp['Via']].compact.join(', '))
+          headers = resp.to_hash.merge(Via: [HEADER_VIA, resp['Via']].compact.join(', '))
 
           client_conn.puts <<~eos.chomp
             HTTP/1.1 #{resp.code}
