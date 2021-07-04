@@ -11,10 +11,10 @@ module ForwardProxy
     attr_reader :bind_address, :bind_port, :logger
 
     def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 32, logger: Logger.new(STDOUT, level: :info))
-      @logger = logger
-      @thread_pool = ThreadPool.new(threads)
       @bind_address = bind_address
       @bind_port = bind_port
+      @thread_pool = ThreadPool.new(threads)
+      @logger = logger
     end
 
     def start
