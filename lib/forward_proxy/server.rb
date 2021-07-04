@@ -11,10 +11,10 @@ module ForwardProxy
     attr_reader :bind_address, :bind_port, :logger
 
     def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 32, logger: Logger.new(STDOUT, level: :info))
-      @logger = logger
-      @thread_pool = ThreadPool.new(threads)
       @bind_address = bind_address
       @bind_port = bind_port
+      @thread_pool = ThreadPool.new(threads)
+      @logger = logger
     end
 
     def start
@@ -130,20 +130,20 @@ module ForwardProxy
           # "Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content"
           # https://tools.ietf.org/html/rfc7231#section-4.3.6
 
-          #  An intermediary MAY combine an ordered subsequence of Via header
-          #  field entries into a single such entry if the entries have identical
-          #  received-protocol values.  For example,
+          # An intermediary MAY combine an ordered subsequence of Via header
+          # field entries into a single such entry if the entries have identical
+          # received-protocol values.  For example,
           #
-          #    Via: 1.0 ricky, 1.1 ethel, 1.1 fred, 1.0 lucy
+          #   Via: 1.0 ricky, 1.1 ethel, 1.1 fred, 1.0 lucy
           #
-          #  could be collapsed to
+          # could be collapsed to
           #
-          #    Via: 1.0 ricky, 1.1 mertz, 1.0 lucy
+          #   Via: 1.0 ricky, 1.1 mertz, 1.0 lucy
           #
-          #  A sender SHOULD NOT combine multiple entries unless they are all
-          #  under the same organizational control and the hosts have already been
-          #  replaced by pseudonyms.  A sender MUST NOT combine entries that have
-          #  different received-protocol values.
+          # A sender SHOULD NOT combine multiple entries unless they are all
+          # under the same organizational control and the hosts have already been
+          # replaced by pseudonyms.  A sender MUST NOT combine entries that have
+          # different received-protocol values.
           headers = resp.to_hash.merge(Via: [HEADER_VIA, resp['Via']].compact.join(', '))
 
           client_conn.puts <<~eos.chomp
