@@ -6,8 +6,8 @@ Minimal forward proxy using 150LOC and only standard libraries. Useful for devel
 
 ```
 $ forward-proxy --binding 0.0.0.0 --port 3182 --threads 2
-[2021-01-14 19:37:47 +1100] INFO Listening 0.0.0.0:3182
-[2021-01-14 19:38:24 +1100] INFO CONNECT raw.githubusercontent.com:443 HTTP/1.1
+I, [2021-07-04T10:33:32.947653 #1790]  INFO -- : Listening 127.0.0.1:3000
+I, [2021-07-04T10:33:32.998298 #1790]  INFO -- : CONNECT raw.githubusercontent.com:443 HTTP/1.1
 ```
 
 ## Installation
