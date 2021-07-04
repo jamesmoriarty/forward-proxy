@@ -60,9 +60,17 @@ module ForwardProxy
 
     attr_reader :socket, :thread_pool
 
+    # The following comments are from the IETF document
+    # "Hypertext Transfer Protocol -- HTTP/1.1: Basic Rules"
+    # https://datatracker.ietf.org/doc/html/rfc2616#section-2.2
+
     METHOD_CONNECT = "CONNECT"
     METHOD_GET = "GET"
     METHOD_POST = "POST"
+
+    # HTTP/1.1 defines the sequence CR LF as the end-of-line marker for all
+    # protocol elements except the entity-body.
+    HEADER_EOP = "\r\n"
 
     # The following comments are from the IETF document
     # "Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content"
@@ -96,7 +104,10 @@ module ForwardProxy
       # blank line that concludes the successful response's header section;
       # data received after that blank line is from the server identified by
       # the request-target.
-      client_conn.write "HTTP/1.1 200 OK\n\n"
+      client_conn.write <<~eos.chomp
+        HTTP/1.1 200 OK
+        #{HEADER_EOP}
+      eos
 
       # The CONNECT method requests that the recipient establish a tunnel to
       # the destination origin server identified by the request-target and,
@@ -135,7 +146,8 @@ module ForwardProxy
 
           client_conn.puts <<~eos.chomp
             HTTP/1.1 #{resp.code}
-            #{headers.map { |header, value| "#{header}: #{value}" }.join("\n")}\n\n
+            #{headers.map { |header, value| "#{header}: #{value}" }.join("\n")}
+            #{HEADER_EOP}
           eos
 
           # The following comments are taken from:
@@ -155,6 +167,7 @@ module ForwardProxy
       client_conn.puts <<~eos.chomp
         HTTP/1.1 502
         Via: #{HEADER_VIA}
+        #{HEADER_EOP}
       eos
 
       log(err.message, "ERROR")
