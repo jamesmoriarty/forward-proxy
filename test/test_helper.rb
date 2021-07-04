@@ -113,10 +113,11 @@ def with_dest(uri)
   server_thread.join
 end
 
-def with_proxy(uri, bind_address: "127.0.0.1", bind_port: 3000, threads: 32)
+def with_proxy(uri, bind_address: "127.0.0.1", bind_port: 3000, threads: 32, logger: Logger.new(STDOUT, level: :error))
   proxy = ForwardProxy::Server.new(
     bind_address: bind_address,
-    bind_port: bind_port
+    bind_port: bind_port,
+    logger: logger
   )
 
   proxy_thread = Thread.new { proxy.start }

@@ -1,3 +1,4 @@
+require 'logger'
 require 'socket'
 require 'webrick'
 require 'net/http'
@@ -7,9 +8,10 @@ require 'forward_proxy/thread_pool'
 
 module ForwardProxy
   class Server
-    attr_reader :bind_address, :bind_port
+    attr_reader :bind_address, :bind_port, :logger
 
-    def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 32)
+    def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 32, logger: Logger.new(STDOUT, level: :info))
+      @logger = logger
       @thread_pool = ThreadPool.new(threads)
       @bind_address = bind_address
       @bind_port = bind_port
@@ -20,14 +22,14 @@ module ForwardProxy
 
       @socket = TCPServer.new(bind_address, bind_port)
 
-      log("Listening #{bind_address}:#{bind_port}")
+      logger.info("Listening #{bind_address}:#{bind_port}")
 
       loop do
         thread_pool.schedule(socket.accept) do |client_conn|
           begin
             req = parse_req(client_conn)
 
-            log(req.request_line)
+            logger.info(req.request_line)
 
             case req.request_method
             when METHOD_CONNECT then handle_tunnel(client_conn, req)
@@ -45,12 +47,12 @@ module ForwardProxy
     rescue Interrupt
       shutdown
     rescue IOError, Errno::EBADF => e
-      log(e.message, "ERROR")
+      logger.error(e.message)
     end
 
     def shutdown
       if socket
-        log("Shutting down")
+        logger.info("Shutting down")
 
         socket.close
       end
@@ -170,8 +172,9 @@ module ForwardProxy
         #{HEADER_EOP}
       eos
 
-      log(err.message, "ERROR")
-      puts err.backtrace.map { |line| "  #{line}" }
+      logger.error(err.message)
+
+      logger.debug(err.backtrace.join("\n"))
     end
 
     def map_webrick_to_net_http_req(req)
@@ -190,7 +193,7 @@ module ForwardProxy
     def transfer(src_conn, dest_conn)
       IO.copy_stream(src_conn, dest_conn)
     rescue => e
-      log(e.message, "WARNING")
+      logger.warn(e.message)
     end
 
     def parse_req(client_conn)
@@ -199,10 +202,6 @@ module ForwardProxy
       end
     rescue => e
       throw Errors::HTTPParseError.new(e.message)
-    end
-
-    def log(str, level = 'INFO')
-      puts "[#{Time.now}] #{level} #{str}"
     end
   end
 end
