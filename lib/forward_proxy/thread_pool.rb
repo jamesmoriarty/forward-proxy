@@ -1,16 +1,15 @@
 module ForwardProxy
   class ThreadPool
-    attr_reader :queue, :threads, :size
+    attr_reader :queue, :size
 
     def initialize(size)
-      @size    = size
-      @queue   = Queue.new
-      @threads = []
+      @size  = size
+      @queue = Queue.new
     end
 
     def start
       size.times do
-        threads << Thread.new do
+        Thread.new do
           loop do
             job, args = queue.pop
             job.call(*args)
