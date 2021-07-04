@@ -58,4 +58,17 @@ class ForwardProxyTest < Minitest::Test
       end
     end
   end
+
+  def test_logger
+    uri = URI('http://127.0.0.1:8000/test/index.txt')
+
+    with_dest(uri) do
+      with_proxy(uri, logger: Logger.new(io = StringIO.new)) do |http|
+        resp = http.request Net::HTTP::Get.new(uri)
+
+        assert_equal "200", resp.code
+        assert_match /GET.*\/test\/index.txt HTTP\/1.1/, io.string
+      end
+    end
+  end
 end
