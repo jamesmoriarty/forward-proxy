@@ -15,7 +15,8 @@ OptionParser.new do |parser|
     options[:bind_address] = bind_address
   end
 
-  parser.on("-tTHREADS", "--threads=THREADS", Integer, "Specify the number of client threads. Default: 128") do |threads|
+  parser.on("-tTHREADS", "--threads=THREADS", Integer,
+            "Specify the number of client threads. Default: 128") do |threads|
     options[:threads] = threads
   end
 
