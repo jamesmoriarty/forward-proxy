@@ -10,11 +10,11 @@ module ForwardProxy
   class Server
     attr_reader :bind_address, :bind_port, :logger
 
-    def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 32, logger: Logger.new(STDOUT, level: :info))
+    def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 32, logger: default_logger)
       @bind_address = bind_address
       @bind_port = bind_port
-      @thread_pool = ThreadPool.new(threads)
       @logger = logger
+      @thread_pool = ThreadPool.new(threads)
     end
 
     def start
@@ -29,7 +29,7 @@ module ForwardProxy
           begin
             req = parse_req(client_conn)
 
-            logger.info(req.request_line)
+            logger.info(req.request_line.strip)
 
             case req.request_method
             when METHOD_CONNECT then handle_tunnel(client_conn, req)
@@ -37,8 +37,8 @@ module ForwardProxy
             else
               raise Errors::HTTPMethodNotImplemented
             end
-          rescue => err
-            handle_error(err, client_conn)
+          rescue => e
+            handle_error(e, client_conn)
           ensure
             client_conn.close
           end
@@ -173,8 +173,11 @@ module ForwardProxy
       eos
 
       logger.error(err.message)
-
       logger.debug(err.backtrace.join("\n"))
+    end
+
+    def default_logger
+      Logger.new(STDOUT, level: :info)
     end
 
     def map_webrick_to_net_http_req(req)
