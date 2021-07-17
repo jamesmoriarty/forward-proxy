@@ -16,7 +16,7 @@ OptionParser.new do |parser|
   end
 
   parser.on("-tTIMEOUT", "--timeout=TIMEOUT", Integer,
-            "Specify the connection timout in seconds. Default: 300") do |threads|
+            "Specify the connection timeout in seconds. Default: 300") do |threads|
     options[:timeout] = threads
   end
 
