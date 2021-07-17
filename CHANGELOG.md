@@ -1,5 +1,13 @@
 # CHANGELOG
 
+- add connection timeout to stop tracking connection from saturating client threads.
+- add cli flats for connection timeout `-t` and `--timeout`.
+- change cli short flag `-t` to `-c` for `--threads`.
+
+## 0.5.0
+
+- increase default threads from `32` to `128`.
+
 ## 0.2.0
 
 - Extract errors into module.
