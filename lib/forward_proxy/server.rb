@@ -1,20 +1,23 @@
 require 'logger'
 require 'socket'
-require 'webrick'
+require 'timeout'
 require 'net/http'
+require 'webrick'
+require 'forward_proxy/errors/connection_timeout_error'
 require 'forward_proxy/errors/http_method_not_implemented'
 require 'forward_proxy/errors/http_parse_error'
 require 'forward_proxy/thread_pool'
 
 module ForwardProxy
   class Server
-    attr_reader :bind_address, :bind_port, :logger
+    attr_reader :bind_address, :bind_port, :logger, :timeout
 
-    def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 128, logger: default_logger)
+    def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 4, timeout: 1, logger: default_logger)
       @bind_address = bind_address
       @bind_port = bind_port
       @logger = logger
       @thread_pool = ThreadPool.new(threads)
+      @timeout = timeout
     end
 
     def start
@@ -27,18 +30,20 @@ module ForwardProxy
       loop do
         thread_pool.schedule(socket.accept) do |client_conn|
           begin
-            req = parse_req(client_conn)
+            Timeout::timeout(timeout, Errors::ConnectionTimeoutError, "connection exceeded #{timeout} seconds") do
+              req = parse_req(client_conn)
 
-            logger.info(req.request_line.strip)
+              logger.info(req.request_line.strip)
 
-            case req.request_method
-            when METHOD_CONNECT then handle_tunnel(client_conn, req)
-            when METHOD_GET, METHOD_POST then handle(client_conn, req)
-            else
-              raise Errors::HTTPMethodNotImplemented
+              case req.request_method
+              when METHOD_CONNECT then handle_tunnel(client_conn, req)
+              when METHOD_GET, METHOD_POST then handle(client_conn, req)
+              else
+                raise Errors::HTTPMethodNotImplemented
+              end
             end
           rescue => e
-            handle_error(e, client_conn)
+            handle_error(client_conn, e)
           ensure
             client_conn.close
           end
@@ -165,9 +170,15 @@ module ForwardProxy
       end
     end
 
-    def handle_error(err, client_conn)
+    def handle_error(client_conn, err)
+      status_code = case err
+                    when Errors::ConnectionTimeoutError then 504
+                    else
+                      502
+                    end
+
       client_conn.puts <<~eos.chomp
-        HTTP/1.1 502
+        HTTP/1.1 #{status_code}
         Via: #{HEADER_VIA}
         #{HEADER_EOP}
       eos
