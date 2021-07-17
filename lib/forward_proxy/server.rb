@@ -12,7 +12,7 @@ module ForwardProxy
   class Server
     attr_reader :bind_address, :bind_port, :logger, :timeout
 
-    def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 4, timeout: 1, logger: default_logger)
+    def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 4, timeout: 300, logger: default_logger)
       @bind_address = bind_address
       @bind_port = bind_port
       @logger = logger
