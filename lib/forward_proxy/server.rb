@@ -67,13 +67,13 @@ module ForwardProxy
 
     attr_reader :socket, :thread_pool
 
-    # The following comments are from the IETF document
-    # "Hypertext Transfer Protocol -- HTTP/1.1: Basic Rules"
-    # https://datatracker.ietf.org/doc/html/rfc2616#section-2.2
-
     METHOD_CONNECT = "CONNECT"
     METHOD_GET = "GET"
     METHOD_POST = "POST"
+
+    # The following comments are from the IETF document
+    # "Hypertext Transfer Protocol -- HTTP/1.1: Basic Rules"
+    # https://datatracker.ietf.org/doc/html/rfc2616#section-2.2
 
     # HTTP/1.1 defines the sequence CR LF as the end-of-line marker for all
     # protocol elements except the entity-body.
