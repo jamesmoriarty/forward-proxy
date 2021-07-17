@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.6.0
+
 - add connection timeout to stop tracking connection from saturating client threads.
 - add cli flats for connection timeout `-t` and `--timeout`.
 - change cli short flag `-t` to `-c` for `--threads`.
