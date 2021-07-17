@@ -39,6 +39,16 @@ class ForwardProxyTest < Minitest::Test
     end
   end
 
+  def test_handle_error_with_timeout
+    with_dest(uri = URI('http://127.0.0.1:8000/test/index.txt')) do
+      with_proxy(uri, timeout: 1/1000r) do |http|
+        resp = http.request Net::HTTP::Get.new(uri)
+
+        assert_equal "504", resp.code
+      end
+    end
+  end
+
   def test_handle_tunnel
     with_dest(uri = URI('https://127.0.0.1:8000/test/index.txt')) do
       with_proxy(uri) do |http|

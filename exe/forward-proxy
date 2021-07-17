@@ -15,7 +15,12 @@ OptionParser.new do |parser|
     options[:bind_address] = bind_address
   end
 
-  parser.on("-tTHREADS", "--threads=THREADS", Integer,
+  parser.on("-tTIMEOUT", "--timeout=TIMEOUT", Integer,
+            "Specify the connection timout in seconds. Default: 300") do |threads|
+    options[:timeout] = threads
+  end
+
+  parser.on("-cTHREADS", "--threads=THREADS", Integer,
             "Specify the number of client threads. Default: 128") do |threads|
     options[:threads] = threads
   end
