@@ -1,24 +1,29 @@
 module ForwardProxy
   class ThreadPool
-    attr_reader :queue, :size
+    attr_reader :queue, :size, :threads
 
     def initialize(size)
-      @size  = size
-      @queue = Queue.new
+      @queue   = Queue.new
+      @size    = size
+      @threads = []
     end
 
     def start
       size.times do
-        Thread.new do
+        thread = Thread.new do
           loop do
             job, args = queue.pop
             job.call(*args)
           end
         end
+
+        threads.push(thread)
       end
     end
 
     def schedule(*args, &block)
+      raise Exception, "no threads" unless threads.any?(&:alive?)
+
       queue.push([block, args])
     end
   end
