@@ -173,6 +173,7 @@ module ForwardProxy
     def handle_error(client_conn, err)
       status_code = case err
                     when Errors::ConnectionTimeoutError then 504
+                    when Errors::HTTPMethodNotImplemented then 501
                     else
                       502
                     end
