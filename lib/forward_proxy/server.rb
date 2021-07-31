@@ -37,7 +37,7 @@ module ForwardProxy
 
               case req.request_method
               when METHOD_CONNECT then handle_tunnel(client_conn, req)
-              when METHOD_GET, METHOD_POST then handle(client_conn, req)
+              when METHOD_GET, METHOD_HEAD, METHOD_POST then handle(client_conn, req)
               else
                 raise Errors::HTTPMethodNotImplemented
               end
@@ -69,6 +69,7 @@ module ForwardProxy
 
     METHOD_CONNECT = "CONNECT"
     METHOD_GET = "GET"
+    METHOD_HEAD = "HEAD"
     METHOD_POST = "POST"
 
     # The following comments are from the IETF document
@@ -197,6 +198,7 @@ module ForwardProxy
 
       klass = case req.request_method
               when METHOD_GET then Net::HTTP::Get
+              when METHOD_HEAD then Net::HTTP::Head
               when METHOD_POST then Net::HTTP::Post
               else
                 raise Errors::HTTPMethodNotImplemented
