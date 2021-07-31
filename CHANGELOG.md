@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 0.8.0
+
+- add http head support.
+- improve timeout testing.
+
+## 0.7.0
+
+- bugfix default threads from `4` to `128`.
+
 ## 0.6.0
 
 - add connection timeout to stop tracking connection from saturating client threads.
