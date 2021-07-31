@@ -32,7 +32,7 @@ class ForwardProxyTest < Minitest::Test
       with_proxy(uri) do |http|
         resp = http.request Net::HTTP::Trace.new(uri)
 
-        assert_equal "502", resp.code
+        assert_equal "501", resp.code
         assert_equal "HTTP/1.1 ForwardProxy", resp['via']
         assert_equal "", resp.body
       end
@@ -40,7 +40,7 @@ class ForwardProxyTest < Minitest::Test
   end
 
   def test_handle_error_with_timeout
-    with_dest(uri = URI('http://127.0.0.1:8000/test/index.txt')) do
+    with_dest(uri = URI('http://127.0.0.1:8000/timeout')) do
       with_proxy(uri, timeout: 1/1000r) do |http|
         resp = http.request Net::HTTP::Get.new(uri)
 

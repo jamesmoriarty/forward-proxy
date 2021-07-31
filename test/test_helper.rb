@@ -101,6 +101,11 @@ def with_dest(uri)
   ) if uri.scheme == 'https'
 
   server = WEBrick::HTTPServer.new(options)
+  
+  server.mount_proc('/timeout') do |req, res|
+    sleep 1/250r
+    res.status = 500
+  end
 
   server_thread = Thread.new { server.start }
 
