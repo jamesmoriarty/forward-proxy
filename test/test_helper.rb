@@ -101,10 +101,17 @@ def with_dest(uri)
   ) if uri.scheme == 'https'
 
   server = WEBrick::HTTPServer.new(options)
-  
-  server.mount_proc('/timeout') do |req, res|
-    sleep 1/250r
-    res.status = 500
+
+  server.mount_proc('/stream') do |req, res|
+    rd, wr = IO.pipe
+    res['Content-Type'] = 'text/event-stream'
+    res.body = rd
+    res.chunked = true
+    [1..3].each do |i|
+      sleep 1
+      wr.write "data: #{i}\n\n"
+    end
+    wr.close
   end
 
   server_thread = Thread.new { server.start }
