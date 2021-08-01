@@ -1,9 +1,13 @@
 # CHANGELOG
 
+## 0.9.0
+
+- bugfix chunked response behavior.
+
 ## 0.8.0
 
-- add http head support.
-- improve timeout testing.
+- add http `head` support.
+- add http `501` not implemented status response.
 
 ## 0.7.0
 
