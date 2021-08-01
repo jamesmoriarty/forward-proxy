@@ -52,16 +52,6 @@ class ForwardProxyTest < Minitest::Test
     end
   end
 
-  def test_handle_error_with_timeout
-    with_dest(uri = URI('http://127.0.0.1:8000/stream')) do
-      with_proxy(uri, timeout: 1/50r) do |http|
-        resp = http.request Net::HTTP::Get.new(uri)
-
-        assert_equal "504", resp.code
-      end
-    end
-  end
-
   def test_handle_tunnel
     with_dest(uri = URI('https://127.0.0.1:8000/test/index.txt')) do
       with_proxy(uri) do |http|
@@ -70,6 +60,23 @@ class ForwardProxyTest < Minitest::Test
         assert_equal "200", resp.code
         assert_match /WEBrick\//, resp['server']
         assert_equal "hello world", resp.body
+      end
+    end
+  end
+
+  def test_handle_error_with_timeout
+    app = Proc.new do |req, res|
+      rd, wr = IO.pipe
+      res.body = rd
+      sleep 1 # 1000ms
+      wr.close
+    end
+
+    with_dest(uri = URI('http://127.0.0.1:8000/stream'), { '/stream' => app }) do
+      with_proxy(uri, timeout: 1/50r) do |http| # 50ms
+        resp = http.request Net::HTTP::Get.new(uri)
+
+        assert_equal "504", resp.code
       end
     end
   end
