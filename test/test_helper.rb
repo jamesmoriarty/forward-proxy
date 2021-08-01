@@ -101,7 +101,7 @@ def with_dest(uri, middleware = {})
   ) if uri.scheme == 'https'
 
   server = WEBrick::HTTPServer.new(options)
-  
+
   middleware.each { |path, app| server.mount_proc(path, app) }
 
   server_thread = Thread.new { server.start }
