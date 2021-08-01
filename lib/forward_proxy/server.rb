@@ -78,7 +78,7 @@ module ForwardProxy
 
     # HTTP/1.1 defines the sequence CR LF as the end-of-line marker for all
     # protocol elements except the entity-body.
-    HEADER_EOP = "\r\n"
+    HTTP_EOP = "\r\n"
 
     # The following comments are from the IETF document
     # "Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content"
@@ -114,7 +114,7 @@ module ForwardProxy
       # the request-target.
       client_conn.write <<~eos.chomp
         HTTP/1.1 200 OK
-        #{HEADER_EOP}
+        #{HTTP_EOP}
       eos
 
       # The CONNECT method requests that the recipient establish a tunnel to
@@ -155,7 +155,7 @@ module ForwardProxy
           client_conn.puts <<~eos.chomp
             HTTP/1.1 #{resp.code}
             #{headers.map { |header, value| "#{header}: #{value}" }.join("\n")}
-            #{HEADER_EOP}
+            #{HTTP_EOP}
           eos
 
           # The following comments are taken from:
@@ -166,6 +166,16 @@ module ForwardProxy
           # instead stream the body directly to an IO.
           resp.read_body do |chunk|
             client_conn << chunk
+            # The following comments are taken from:
+            # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Transfer-Encoding#directives
+
+            # Data is sent in a series of chunks. The Content-Length header is omitted in this case and 
+            # at the beginning of each chunk you need to add the length of the current chunk in 
+            # hexadecimal format, followed by '\r\n' and then the chunk itself, followed by another 
+            # '\r\n'. The terminating chunk is a regular chunk, with the exception that its length 
+            # is zero. It is followed by the trailer, which consists of a (possibly empty) sequence of 
+            # header fields.
+            client_conn << HTTP_EOP if resp['Transfer-Encoding'] == 'chunked'
           end
         end
       end
@@ -182,7 +192,7 @@ module ForwardProxy
       client_conn.puts <<~eos.chomp
         HTTP/1.1 #{status_code}
         Via: #{HEADER_VIA}
-        #{HEADER_EOP}
+        #{HTTP_EOP}
       eos
 
       logger.error(err.message)

@@ -81,6 +81,35 @@ class ForwardProxyTest < Minitest::Test
     end
   end
 
+  def test_stream_response_body
+    called = 0
+
+    app = Proc.new do |req, res|
+      res.status = 200
+      res['Content-Type'] = 'text/plain'
+      res.chunked = true
+      str = "0123456789" * 10000
+      res.body = str
+      res['Content-Length'] = str.length
+    end
+
+    with_dest(uri = URI('http://127.0.0.1:8000/chunked'), { '/chunked' => app }) do
+      with_proxy(uri) do |http|
+        begin
+          resp = http.request Net::HTTP::Get.new(uri) do |response|
+            response.read_body do |chunk|
+              called += 1
+            end
+          end
+        rescue EOFError # https://bugs.ruby-lang.org/issues/14972
+          called += 1
+        end
+
+        assert 1 < called
+      end
+    end
+  end
+
   def test_logger
     with_dest(uri = URI('http://127.0.0.1:8000/test/index.txt')) do
       with_proxy(uri, logger: Logger.new(io = StringIO.new)) do |http|
