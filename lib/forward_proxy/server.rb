@@ -165,7 +165,6 @@ module ForwardProxy
           # handling large files or wish to implement a progress bar you can
           # instead stream the body directly to an IO.
           resp.read_body do |chunk|
-            client_conn << chunk
             # The following comments are taken from:
             # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Transfer-Encoding#directives
 
@@ -175,7 +174,9 @@ module ForwardProxy
             # '\r\n'. The terminating chunk is a regular chunk, with the exception that its length
             # is zero. It is followed by the trailer, which consists of a (possibly empty) sequence of
             # header fields.
-            client_conn << HTTP_EOP if resp['Transfer-Encoding'] == 'chunked'
+            client_conn << chunk.bytesize.to_s(16) + HTTP_EOP if resp['Transfer-Encoding'] == 'chunked'
+
+            client_conn << chunk
           end
         end
       end
