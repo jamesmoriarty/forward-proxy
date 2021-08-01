@@ -73,7 +73,7 @@ class ForwardProxyTest < Minitest::Test
     end
 
     with_dest(uri = URI('http://127.0.0.1:8000/stream'), { '/stream' => app }) do
-      with_proxy(uri, timeout: 1/50r) do |http| # 50ms
+      with_proxy(uri, timeout: 1/20r) do |http| # 50ms
         resp = http.request Net::HTTP::Get.new(uri)
 
         assert_equal "504", resp.code
