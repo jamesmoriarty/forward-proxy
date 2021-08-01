@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>
+  File: README
+  
+    &mdash; Documentation by YARD 0.9.26
+  
+</title>
+
+  <link rel="stylesheet" href="css/style.css" type="text/css" />
+
+  <link rel="stylesheet" href="css/common.css" type="text/css" />
+
+<script type="text/javascript">
+  pathId = "README";
+  relpath = '';
+</script>
+
+
+  <script type="text/javascript" charset="utf-8" src="js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="js/app.js"></script>
+
+
+  </head>
+  <body>
+    <div class="nav_wrap">
+      <iframe id="nav" src="file_list.html?1"></iframe>
+      <div id="resizer"></div>
+    </div>
+
+    <div id="main" tabindex="-1">
+      <div id="header">
+        <div id="menu">
+  
+    <a href="_index.html">Index</a> &raquo; 
+    <span class="title">File: README</span>
+  
+</div>
+
+        <div id="search">
+  
+    <a class="full_list_link" id="class_list_link"
+        href="class_list.html">
+
+        <svg width="24" height="24">
+          <rect x="0" y="4" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="12" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="20" width="24" height="4" rx="1" ry="1"></rect>
+        </svg>
+    </a>
+  
+</div>
+        <div class="clear"></div>
+      </div>
+
+      <div id="content"><div id='filecontents'>
+<h1 id="label-ForwardProxy">ForwardProxy</h1>
+
+<p><img src="https://img.shields.io/gem/v/forward-proxy"> <img src="https://img.shields.io/gem/dt/forward-proxy"> <img src="https://github.com/jamesmoriarty/forward-proxy/workflows/Continuous%20Integration/badge.svg?branch=main"></p>
+
+<p>Minimal forward proxy using 150LOC and only standard libraries. Useful for development, testing, and learning.</p>
+
+<pre class="code ruby"><code class="ruby">$ forward-proxy --binding 0.0.0.0 --port 3182 --threads 2
+I, [2021-07-04T10:33:32.947653 #1790]  INFO -- : Listening 0.0.0.0:3182
+I, [2021-07-04T10:33:32.998298 #1790]  INFO -- : CONNECT raw.githubusercontent.com:443 HTTP/1.1
+</code></pre>
+
+<h2 id="label-Installation">Installation</h2>
+
+<p>Add this line to your application&#39;s Gemfile:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_gem'>gem</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>forward-proxy</span><span class='tstring_end'>&#39;</span></span>
+</code></pre>
+
+<p>And then execute:</p>
+
+<pre class="code ruby"><code class="ruby">$ bundle install
+</code></pre>
+
+<p>Or install it yourself as:</p>
+
+<pre class="code ruby"><code class="ruby">$ gem install forward-proxy
+</code></pre>
+
+<h2 id="label-Usage">Usage</h2>
+
+<h3 id="label-CLI">CLI</h3>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_forward'>forward</span><span class='op'>-</span><span class='id identifier rubyid_proxy'>proxy</span>
+</code></pre>
+
+<pre class="code ruby"><code class="ruby">Usage: forward-proxy [options]
+    -p, --port=PORT                  Bind to specified port. Default: 9292
+    -b, --binding=BINDING            Bind to the specified ip. Default: 127.0.0.1
+    -t, --timeout=TIMEOUT            Specify the connection timeout in seconds. Default: 300
+    -c, --threads=THREADS            Specify the number of client threads. Default: 128
+    -h, --help                       Prints this help.
+</code></pre>
+
+<h3 id="label-Library">Library</h3>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>forward_proxy</span><span class='tstring_end'>&#39;</span></span>
+
+<span class='id identifier rubyid_proxy'>proxy</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="ForwardProxy.html" title="ForwardProxy (module)">ForwardProxy</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="ForwardProxy/Server.html" title="ForwardProxy::Server (class)">Server</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="ForwardProxy/Server.html#initialize-instance_method" title="ForwardProxy::Server#initialize (method)">new</a></span></span><span class='lparen'>(</span>
+  <span class='label'>bind_address:</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>127.0.0.1</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span>
+  <span class='label'>bind_port:</span> <span class='int'>3000</span>
+<span class='rparen'>)</span>
+
+<span class='id identifier rubyid_proxy'>proxy</span><span class='period'>.</span><span class='id identifier rubyid_start'>start</span>
+</code></pre>
+
+<h2 id="label-Development">Development</h2>
+
+<p>After checking out the repo, run <code>bin/setup</code> to install dependencies. Then, run <code>rake test</code> to run the tests. You can also run <code>bin/console</code> for an interactive prompt that will allow you to experiment.</p>
+
+<p>To install this gem onto your local machine, run <code>bundle exec rake install</code>. To release a new version, update the version number in <code>version.rb</code>, and then run <code>bundle exec rake release</code>, which will create a git tag for the version, push git commits and tags, and push the <code>.gem</code> file to <a href="https://rubygems.org">rubygems.org</a>.</p>
+
+<h2 id="label-Contributing">Contributing</h2>
+
+<p>Bug reports and pull requests are welcome on GitHub at <a href="https://github.com/jamesmoriarty/forward-proxy">github.com/jamesmoriarty/forward-proxy</a>. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the <a href="https://github.com/jamesmoriarty/forward-proxy/blob/master/CODE_OF_CONDUCT.md">code of conduct</a>.</p>
+
+<h2 id="label-License">License</h2>
+
+<p>The gem is available as open source under the terms of the <a href="https://opensource.org/licenses/MIT">MIT License</a>.</p>
+
+<h2 id="label-Code+of+Conduct">Code of Conduct</h2>
+
+<p>Everyone interacting in the ForwardProxy project&#39;s codebases, issue trackers, chat rooms and mailing lists is expected to follow the <a href="https://github.com/jamesmoriarty/forward-proxy/blob/master/CODE_OF_CONDUCT.md">code of conduct</a>.</p>
+</div></div>
+
+      <div id="footer">
+  Generated on Sun Aug  1 17:01:33 2021 by
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.26 (ruby-2.6.3).
+</div>
+
+    </div>
+  </body>
+</html>
