@@ -83,14 +83,15 @@ class ForwardProxyTest < Minitest::Test
 
   def test_stream_response_body
     called = 0
+    content_body = "0123456789" * 1_000
+    response_body = ""
 
     app = Proc.new do |req, res|
       res.status = 200
       res['Content-Type'] = 'text/plain'
       res.chunked = true
-      str = "0123456789" * 10000
-      res.body = str
-      res['Content-Length'] = str.length
+      res.body = content_body
+      res['Content-Length'] = content_body.length
     end
 
     with_dest(uri = URI('http://127.0.0.1:8000/chunked'), { '/chunked' => app }) do
@@ -98,6 +99,7 @@ class ForwardProxyTest < Minitest::Test
         begin
           resp = http.request Net::HTTP::Get.new(uri) do |response|
             response.read_body do |chunk|
+              response_body += chunk
               called += 1
             end
           end
@@ -106,6 +108,7 @@ class ForwardProxyTest < Minitest::Test
         end
 
         assert 1 < called
+        assert_match content_body, response_body
       end
     end
   end
