@@ -10,6 +10,13 @@ I, [2021-07-04T10:33:32.947653 #1790]  INFO -- : Listening 0.0.0.0:3182
 I, [2021-07-04T10:33:32.998298 #1790]  INFO -- : CONNECT raw.githubusercontent.com:443 HTTP/1.1
 ```
 
+## Features
+
+- Supports HTTPS `CONNECT` tunneling and HTTP `GET`, `POST`, and `HEAD` proxy request methods.
+- Configurable client connection thread pool and timeout.
+- `Transfer-Encoding: chunked` and response streaming.
+- Automated tests.
+
 ## Installation
 
 Add this line to your application's Gemfile:
