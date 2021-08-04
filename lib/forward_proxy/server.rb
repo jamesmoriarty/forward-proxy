@@ -39,7 +39,7 @@ module ForwardProxy
               when METHOD_CONNECT then handle_tunnel(client_conn, req)
               when METHOD_GET, METHOD_HEAD, METHOD_POST then handle(client_conn, req)
               else
-                raise Errors::HTTPMethodNotImplemented
+                raise Errors::HTTPMethodNotImplemented, "unsupported http method #{req.request_method}"
               end
             end
           rescue => e
@@ -56,21 +56,14 @@ module ForwardProxy
     end
 
     def shutdown
-      if socket
-        logger.info("Shutting down")
-
-        socket.close
-      end
+      socket.close if socket
     end
 
     private
 
     attr_reader :socket, :thread_pool
 
-    METHOD_CONNECT = "CONNECT"
-    METHOD_GET = "GET"
-    METHOD_HEAD = "HEAD"
-    METHOD_POST = "POST"
+    METHOD_CONNECT, METHOD_GET, METHOD_HEAD, METHOD_POST = "CONNECT", "GET", "HEAD", "POST"
 
     # The following comments are from the IETF document
     # "Hypertext Transfer Protocol -- HTTP/1.1: Basic Rules"

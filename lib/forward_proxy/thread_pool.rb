@@ -22,7 +22,7 @@ module ForwardProxy
     end
 
     def schedule(*args, &block)
-      raise Exception, "no threads" unless threads.any?(&:alive?)
+      raise "no threads" unless threads.any?(&:alive?)
 
       queue.push([block, args])
     end
