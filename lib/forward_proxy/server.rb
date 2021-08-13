@@ -167,8 +167,21 @@ module ForwardProxy
             # '\r\n'. The terminating chunk is a regular chunk, with the exception that its length
             # is zero. It is followed by the trailer, which consists of a (possibly empty) sequence of
             # header fields.
-            client_conn << chunk.bytesize.to_s(16) + HTTP_EOP if resp['Transfer-Encoding'] == 'chunked'
 
+            # For example,
+            #
+            #   4\r\n        (bytes to send)
+            #   Wiki\r\n     (data)
+            #   6\r\n        (bytes to send)
+            #   pedia \r\n   (data)
+            #   E\r\n        (bytes to send)
+            #   in \r\n
+            #   \r\n
+            #   chunks.\r\n  (data)
+            #   0\r\n        (final byte - 0)
+            #   \r\n         (end message)
+            #
+            client_conn << chunk.bytesize.to_s(16) + HTTP_EOP if resp['Transfer-Encoding'] == 'chunked'
             client_conn << chunk
           end
         end
