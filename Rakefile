@@ -1,6 +1,11 @@
-require "bundler/gem_tasks"
-require "rake/testtask"
+# frozen_string_literal: true
+
+require 'bundler/gem_tasks'
+require 'rake/testtask'
 require 'yard'
+require 'rubocop/rake_task'
+
+RuboCop::RakeTask.new
 
 YARD::Rake::YardocTask.new do |t|
   t.files = ['lib/**/*.rb', 'README', 'CHANGELOG', 'CODE_OF_CONDUCT']
@@ -9,14 +14,14 @@ YARD::Rake::YardocTask.new do |t|
 end
 
 Rake::TestTask.new(:test) do |t|
-  t.libs << "test"
-  t.libs << "lib"
-  t.test_files = FileList["test/**/*_test.rb"]
+  t.libs << 'test'
+  t.libs << 'lib'
+  t.test_files = FileList['test/**/*_test.rb']
 end
 
 namespace :gh do
-  desc "Deploy yard docs to github pages"
-  task :pages => :yard do
+  desc 'Deploy yard docs to github pages'
+  task pages: :yard do
     `git add -f doc`
     `git commit -am "update: $(date)"`
     `git subtree split --prefix doc -b gh-pages`
@@ -26,4 +31,5 @@ namespace :gh do
   end
 end
 
-task :default => :test
+task default: :"rubocop:auto_correct"
+task default: :test

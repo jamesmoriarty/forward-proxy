@@ -1,31 +1,32 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require 'optparse'
 
 options = {}
 
 OptionParser.new do |parser|
-  parser.banner = "Usage: forward-proxy [options]"
+  parser.banner = 'Usage: forward-proxy [options]'
 
-  parser.on("-pPORT", "--port=PORT", String, "Bind to specified port. Default: 9292") do |bind_port|
+  parser.on('-pPORT', '--port=PORT', String, 'Bind to specified port. Default: 9292') do |bind_port|
     options[:bind_port] = bind_port
   end
 
-  parser.on("-bBINDING", "--binding=BINDING", String, "Bind to the specified ip. Default: 127.0.0.1") do |bind_address|
+  parser.on('-bBINDING', '--binding=BINDING', String, 'Bind to the specified ip. Default: 127.0.0.1') do |bind_address|
     options[:bind_address] = bind_address
   end
 
-  parser.on("-tTIMEOUT", "--timeout=TIMEOUT", Integer,
-            "Specify the connection timeout in seconds. Default: 300") do |threads|
+  parser.on('-tTIMEOUT', '--timeout=TIMEOUT', Integer,
+            'Specify the connection timeout in seconds. Default: 300') do |threads|
     options[:timeout] = threads
   end
 
-  parser.on("-cTHREADS", "--threads=THREADS", Integer,
-            "Specify the number of client threads. Default: 128") do |threads|
+  parser.on('-cTHREADS', '--threads=THREADS', Integer,
+            'Specify the number of client threads. Default: 128') do |threads|
     options[:threads] = threads
   end
 
-  parser.on("-h", "--help", "Prints this help.") do
+  parser.on('-h', '--help', 'Prints this help.') do
     puts parser
     exit
   end

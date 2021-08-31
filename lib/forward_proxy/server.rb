@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'logger'
 require 'socket'
 require 'timeout'
@@ -12,7 +14,7 @@ module ForwardProxy
   class Server
     attr_reader :bind_address, :bind_port, :logger, :timeout
 
-    def initialize(bind_address: "127.0.0.1", bind_port: 9292, threads: 128, timeout: 300, logger: default_logger)
+    def initialize(bind_address: '127.0.0.1', bind_port: 9292, threads: 128, timeout: 300, logger: default_logger)
       @bind_address = bind_address
       @bind_port = bind_port
       @logger = logger
@@ -29,24 +31,22 @@ module ForwardProxy
 
       loop do
         thread_pool.schedule(socket.accept) do |client_conn|
-          begin
-            handle_timeout do
-              req = parse_req(client_conn)
+          handle_timeout do
+            req = parse_req(client_conn)
 
-              logger.info(req.request_line.strip)
+            logger.info(req.request_line.strip)
 
-              case req.request_method
-              when METHOD_CONNECT then handle_tunnel(client_conn, req)
-              when METHOD_GET, METHOD_HEAD, METHOD_POST then handle_request(client_conn, req)
-              else
-                raise Errors::HTTPMethodNotImplemented, "unsupported http method #{req.request_method}"
-              end
+            case req.request_method
+            when METHOD_CONNECT then handle_tunnel(client_conn, req)
+            when METHOD_GET, METHOD_HEAD, METHOD_POST then handle_request(client_conn, req)
+            else
+              raise Errors::HTTPMethodNotImplemented, "unsupported http method #{req.request_method}"
             end
-          rescue => e
-            handle_error(client_conn, e)
-          ensure
-            client_conn.close
           end
+        rescue StandardError => e
+          handle_error(client_conn, e)
+        ensure
+          client_conn.close
         end
       end
     rescue Interrupt
@@ -56,14 +56,17 @@ module ForwardProxy
     end
 
     def shutdown
-      socket.close if socket
+      socket&.close
     end
 
     private
 
     attr_reader :socket, :thread_pool
 
-    METHOD_CONNECT, METHOD_GET, METHOD_HEAD, METHOD_POST = "CONNECT", "GET", "HEAD", "POST"
+    METHOD_CONNECT = 'CONNECT'
+    METHOD_GET = 'GET'
+    METHOD_HEAD = 'HEAD'
+    METHOD_POST = 'POST'
 
     # The following comments are from the IETF document
     # "Hypertext Transfer Protocol -- HTTP/1.1: Basic Rules"
@@ -82,7 +85,7 @@ module ForwardProxy
     # MUST send an appropriate Via header field in each inbound request
     # message and MAY send a Via header field in forwarded response
     # messages.
-    HEADER_VIA = "HTTP/1.1 ForwardProxy"
+    HEADER_VIA = 'HTTP/1.1 ForwardProxy'
 
     def handle_tunnel(client_conn, req)
       # The following comments are from the IETF document
@@ -105,10 +108,10 @@ module ForwardProxy
       # blank line that concludes the successful response's header section;
       # data received after that blank line is from the server identified by
       # the request-target.
-      client_conn.write <<~eos.chomp
+      client_conn.write <<~EOS.chomp
         HTTP/1.1 200 OK
         #{HTTP_EOP}
-      eos
+      EOS
 
       # The CONNECT method requests that the recipient establish a tunnel to
       # the destination origin server identified by the request-target and,
@@ -145,11 +148,11 @@ module ForwardProxy
           # different received-protocol values.
           headers = resp.to_hash.merge(Via: [HEADER_VIA, resp['Via']].compact.join(', '))
 
-          client_conn.puts <<~eos.chomp
+          client_conn.puts <<~EOS.chomp
             HTTP/1.1 #{resp.code}
             #{headers.map { |header, value| "#{header}: #{value}" }.join("\n")}
             #{HTTP_EOP}
-          eos
+          EOS
 
           # The following comments are taken from:
           # https://docs.ruby-lang.org/en/2.0.0/Net/HTTP.html#class-Net::HTTP-label-Streaming+Response+Bodies
@@ -196,28 +199,28 @@ module ForwardProxy
                       502
                     end
 
-      client_conn.puts <<~eos.chomp
+      client_conn.puts <<~EOS.chomp
         HTTP/1.1 #{status_code}
         Via: #{HEADER_VIA}
         #{HTTP_EOP}
-      eos
+      EOS
 
       logger.error(err.message)
       logger.debug(err.backtrace.join("\n"))
     end
 
     def handle_timeout(&block)
-      Timeout::timeout(timeout, Errors::ConnectionTimeoutError, "connection exceeded #{timeout} seconds") do
+      Timeout.timeout(timeout, Errors::ConnectionTimeoutError, "connection exceeded #{timeout} seconds") do
         block.call
       end
     end
 
     def default_logger
-      Logger.new(STDOUT, level: :info)
+      Logger.new($stdout, level: :info)
     end
 
     def map_webrick_to_net_http_req(req)
-      req_headers = Hash[req.header.map { |k, v| [k, v.first] }]
+      req_headers = req.header.transform_values(&:first)
 
       klass = case req.request_method
               when METHOD_GET then Net::HTTP::Get
@@ -232,7 +235,7 @@ module ForwardProxy
 
     def transfer(src_conn, dest_conn)
       IO.copy_stream(src_conn, dest_conn)
-    rescue => e
+    rescue StandardError => e
       logger.warn(e.message)
     end
 
@@ -240,7 +243,7 @@ module ForwardProxy
       WEBrick::HTTPRequest.new(WEBrick::Config::HTTP).tap do |req|
         req.parse(client_conn)
       end
-    rescue => e
+    rescue StandardError => e
       throw Errors::HTTPParseError.new(e.message)
     end
   end
