@@ -30,14 +30,14 @@ module ForwardProxy
       loop do
         thread_pool.schedule(socket.accept) do |client_conn|
           begin
-            Timeout::timeout(timeout, Errors::ConnectionTimeoutError, "connection exceeded #{timeout} seconds") do
+            handle_timeout do
               req = parse_req(client_conn)
 
               logger.info(req.request_line.strip)
 
               case req.request_method
               when METHOD_CONNECT then handle_tunnel(client_conn, req)
-              when METHOD_GET, METHOD_HEAD, METHOD_POST then handle(client_conn, req)
+              when METHOD_GET, METHOD_HEAD, METHOD_POST then handle_request(client_conn, req)
               else
                 raise Errors::HTTPMethodNotImplemented, "unsupported http method #{req.request_method}"
               end
@@ -122,7 +122,7 @@ module ForwardProxy
       dest_conn.close
     end
 
-    def handle(client_conn, req)
+    def handle_request(client_conn, req)
       Net::HTTP.start(req.host, req.port) do |http|
         http.request(map_webrick_to_net_http_req(req)) do |resp|
           # The following comments are from the IETF document
@@ -204,6 +204,12 @@ module ForwardProxy
 
       logger.error(err.message)
       logger.debug(err.backtrace.join("\n"))
+    end
+
+    def handle_timeout(&block)
+      Timeout::timeout(timeout, Errors::ConnectionTimeoutError, "connection exceeded #{timeout} seconds") do
+        block.call
+      end
     end
 
     def default_logger
