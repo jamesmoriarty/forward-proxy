@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ForwardProxy
   class ThreadPool
     attr_reader :queue, :size, :threads
@@ -22,7 +24,7 @@ module ForwardProxy
     end
 
     def schedule(*args, &block)
-      raise "no threads" unless threads.any?(&:alive?)
+      raise 'no threads' unless threads.any?(&:alive?)
 
       queue.push([block, args])
     end
