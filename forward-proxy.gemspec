@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['jamespaulmoriarty@gmail.com']
 
   spec.summary       = 'Forward proxy.'
-  spec.description   = 'Forward proxy using just Ruby standard libraries.'
+  spec.description   = 'Minimal forward proxy using 150LOC and only standard libraries. Useful for development, testing, and learning.'
   spec.homepage      = 'https://github.com/jamesmoriarty/forward-proxy'
   spec.license       = 'MIT'
   spec.required_ruby_version = Gem::Requirement.new('>= 2.3.0')
