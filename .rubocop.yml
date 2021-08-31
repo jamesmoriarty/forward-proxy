@@ -5,6 +5,7 @@ AllCops:
   DisabledByDefault: true
   SuggestExtensions: false
   Exclude:
+    - vendor/bundle/**/*
     - '**/test/**'
 
 Style/Documentation:
