@@ -2,7 +2,7 @@
 
 ![Gem Version][3] ![Gem][1] ![Build Status][2]
 
-Minimal forward proxy using 150LOC and only standard libraries. Useful for development, testing, and learning.
+Minimal forward proxy using 150LOC and only standard libraries. Useful for development, testing, and teaching.
 
 ```
 $ forward-proxy --binding 0.0.0.0 --port 3182 --threads 2
